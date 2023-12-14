@@ -1,0 +1,1 @@
+screen -dmS pts-starter python3 monit.py $1

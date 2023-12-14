@@ -1,0 +1,12 @@
+data
+kafka*
+node_modules
+package*
+cookies*
+*.tar.gz
+vendor*
+composer*
+package-lock.json
+cov/*
+buffers/*
+package.json

@@ -1,0 +1,12 @@
+{
+    "drupal": ["has been added"],
+    "wordpress": ["notice-success"],
+    "dokuwiki": ["success"],
+    "opencart": ["alert-success"],
+    "hotcrp": ["is-success"],
+    "kanboard": ["alert-success"],
+    "humhub": ["success"],
+    "phpbb": ["successbox"],
+    "impresscms": ["success"],
+    "gitlab": ["successfully"]
+}

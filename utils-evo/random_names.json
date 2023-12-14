@@ -1,0 +1,34 @@
+{
+    "wordpress": {
+        "_wpnonce": 1,
+        "pagegen_timestamp": 1,
+        "_ajax_fetch_list_nonce": 1,
+        "_ajax_nonce": 1,
+        "autofocus%5Bcontrol%5D": 1,
+        "tgmpa-nonce": 1
+    },
+    "matomo": {
+        "random": 1,
+        "token_auth": 1
+    },
+    "drupal":{
+        "token": 1,
+        "keys": 1,
+        "check_logged_in": 1
+    },
+    "kanboard":{
+        "csrf_token": 1
+    },
+    "dokuwiki":{
+        "sectok": 1
+    },
+    "humhub": {
+    },
+    "phpbb": {
+        "s": 1,
+        "sid": 1
+    },
+    "impresscms": {
+        "id_REQUEST": 1
+    }
+}
