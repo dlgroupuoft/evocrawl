@@ -1,0 +1,12 @@
+{
+    "drupal": ["Access denied", "not authorized", "page not found", "permission is required", "query argument is invalid"],
+    "wordpress": ["notice-error"],
+    "dokuwiki": ["For admins only", "have enough right", "permission denied"],
+    "opencart": ["do not have permission to access"],
+    "hotcrp": ["is-error"],
+    "kanboard": ["form-error", "alert-error"],
+    "humhub": ["has-error"],
+    "phpbb": ["not allowed"],
+    "impresscms": ["not allowed"],
+    "gitlab": ["Not Found"]
+}

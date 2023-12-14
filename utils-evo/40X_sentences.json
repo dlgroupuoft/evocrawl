@@ -1,0 +1,12 @@
+{
+    "drupal": ["Access denied", "not authorized", "page not found", "permission is required", "query argument is invalid"],
+    "wordpress": ["Not Allowed", "invalid nounce", "has expired", "page not found", "wordpress error"],
+    "dokuwiki": ["For admins only", "have enough right", "permission denied"],
+    "opencart": ["do not have permission to access"],
+    "hotcrp": ["Page inaccessible", "not found", "Redirection", "is-error"],
+    "kanboard": ["didn't find this information", "Access Forbidden", "AksesDilarang", "Maafsayatidakdapatmenemukaninformasiinidalamdatabasesaya"],
+    "humhub": ["You are not permitted", "Could not find requested page", "Error"],
+    "phpbb": ["not allowed"],
+    "impresscms": ["not allowed"],
+    "gitlab": ["Not Found"]
+}

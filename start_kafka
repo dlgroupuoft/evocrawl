@@ -1,0 +1,4 @@
+cd kafka*/
+screen -dmS pts-zookeeper bin/zookeeper-server-start.sh config/zookeeper.properties #start zookeeper
+sleep 10
+screen -dmS pts-broker bin/kafka-server-start.sh config/server.properties #start broker
