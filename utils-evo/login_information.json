@@ -6,7 +6,7 @@
     "impresscms":"http://webapp2.csl.toronto.edu:8600/user.php",
     "matomo":"http://matomoxss.csl.toronto.edu/",
     "hotcrp":"http://webapp2.csl.toronto.edu:8500/testconf/",
-    "gitlab":"http://gitlab1106.csl.toronto.edu/users/sign_in",
+    "gitlab":"http://gitlab1101.csl.toronto.edu/users/sign_in",
     "opencart":"http://webapp2.csl.toronto.edu:8800/test/",
     "dokuwiki":"http://webapp2.csl.toronto.edu:8400/doku.php?id=wiki:welcome&do=login",
     "kanboard":"http://webapp2.csl.toronto.edu:8200/",
