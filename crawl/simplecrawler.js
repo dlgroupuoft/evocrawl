@@ -1274,7 +1274,6 @@ const get_cookies = async function(t, currenturl){
     error_seq = error_seq?error_seq:[];
     error_seq.push({css_locators: "restart", timestamp: timeStamp});
     utils.logObject(error_seq, error_name, LOG_FOLDER);
-    console.log("trying to login");
     let temp_url = "";
     if(MODE == 1){
         await t.useRole(Role.anonymous());
@@ -1318,6 +1317,7 @@ const get_cookies = async function(t, currenturl){
     
     await t.useRole(Role.anonymous());
     await login(t, APPNAME, login_info[APPNAME], login_info['crawler'], login_info['password']);
+    console.log(currenturl);
     temp_url = await getURL()
     for(let j = 0; j < 5; j++){
         if(APPNAME != "phpbb"){
@@ -1378,14 +1378,14 @@ const runcrawler = async function(t) {
         }; */
         currentseed.key = utils.replaceToken(currentseed.key, token_name, token_value);
         console.log("current seed: ", JSON.stringify(currentseed));
-        if(url_event[currentseed.url] != undefined){
-            url_event[currentseed.url] ++;
+        if(url_event[currentseed.key] != undefined){
+            url_event[currentseed.key] ++;
             printObject(url_event,  "url_event.json");
-            if(url_event[currentseed.url] > 15){
+            if(url_event[currentseed.key] > 15){
                 continue;
             }
         }
-        cache.page = currentseed.url;
+        cache.page = currentseed.key;
         printObject(cache, "sim_crawler_cache.json");
         //console.log("Current queue length = " + queue.length);
         //MODE=1 --> IDOR, MODE=2 --> TOKEN, MODE=3 --> XSS
