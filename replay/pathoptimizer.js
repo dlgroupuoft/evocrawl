@@ -292,9 +292,9 @@ const relocateElement = async function(locators, Selector, innerText, random_nam
         element = Selector(locator);
     }
     let count = await element.count;
-    if(checkLocatorTag(locator) && count <= 1){
+    /*if(checkLocatorTag(locator) && count <= 1){
         return element;
-    }
+    }*/
     for(let i = locators.length - 2; i >= 0; i --){
         let element_child = element.find(locators[i]);
         let tag = locators[i].split('[')[0];
