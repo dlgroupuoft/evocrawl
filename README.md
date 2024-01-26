@@ -84,7 +84,7 @@ Add a user role object - ```User A,B,C login credentials and login element ident
 Then run the monit.py under the `crawl/` folder with the following command
 
 ```
-screen -dmS [your_screen_process_name] python3 monit.py --APP appname --MODE [IDOR or XSS]
+screen -dmS [your_screen_process_name] python3 monit.py --APP <appname> --MODE [IDOR or XSS]
 ```
 
 Here <appname> is the same name you used for the user role object
