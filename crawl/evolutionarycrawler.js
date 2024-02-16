@@ -1612,7 +1612,7 @@ const mutate = async function (seq_population, s_size, allelements) {
                                     flag = utils.string_backward_match(str1, href);
                                     if(flag){
                                         break;
-                                    }   
+                                    }
                                 }
                             }
                         }
@@ -2016,9 +2016,17 @@ const runevolutionarycrawler = async function (t) {
             }
             console.log("average_scores: ", average_scores);
             // 2. Crossover/mutation TODO: using dynamic feedback, probabilistically perform either crossover or mutation
-            new_seq_population = await crossover(seq_population, s_size, visibleelementids, p_size, allelements);
-            new_seq_population = await mutate(new_seq_population, s_size, allelements);
-
+            try{
+                new_seq_population = await crossover(seq_population, s_size, visibleelementids, p_size, allelements);
+            }catch(e){
+                console.error(e);
+                continue;
+            }
+            try{
+                new_seq_population = await mutate(new_seq_population, s_size, allelements);
+            }catch(e){
+                console.error(e);
+            }
             // 3. Sanitize the population - ex. prevent consecutive duplicate genes in seq
             new_seq_population = sanitizePopulation(new_seq_population);
             // 4. Evaluate fitness
