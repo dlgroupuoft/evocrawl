@@ -39,7 +39,8 @@ const KAFKA_CONSUMER_GROUP = APPNAME+'-'+USER_MODE+'-EC' + BLIND;
 const MARGIN_FACTOR = process.env.MF?process.env.MF:0.1;
 const DEBUG_PRINT = process.env.DEBUG_PRINT=="1"?true:false;  // default - disable debug logs
 const ENABLE_KAFKA = process.env.ENABLE_KAFKA=="1"?true:false;  // default - disable kafka connection
-const heavy_pages = login_info["heavy_pages"];
+//const heavy_pages = login_info["heavy_pages"];
+const heavy_pages = [];
 const logout_keywords = login_info["logout_keywords"];
 let form_app_keywords = form_success[APPNAME];
 let baseURI = extractBaseUrl(login_info[APPNAME]);
