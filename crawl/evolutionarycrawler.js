@@ -51,7 +51,7 @@ var urlobj = new URL(baseURI);
 const PORT = urlobj.port?urlobj.port:'80';
 
 const parameters = {
-    small: [10, 5, 5], //6
+    small: [10, 5, 8], //6
     medium: [10, 6, 6],
     Large: [10, 6, 6]
 }
@@ -968,7 +968,7 @@ const capture_request_url = async function(req_count, currenturl, newurl, elemen
         if(testurl_flag == 0 && (MODE == 1 || MODE == 4)){
             await run_triad(newurl, currenturl, req);
         }
-        if(DEBUG_PRINT) console.log("finish triad test");
+        if(DEBUG_PRINT && (MODE == 1 || MODE ==4)) console.log("finish triad test");
     }
     return total_score;
 }
@@ -1052,6 +1052,57 @@ const random_clickon_submit_buttons = async function(t, typed_texts, total_score
     //printObject(end_list, "end_list.json");
 }
 
+const add_page_to_queue = async function(newurl, currenturl, elementtag, nav_edge){
+    if (newurl != currenturl) {
+        let log_url = utils.replaceToken(currenturl, token_name, "token");
+        let log_newurl = utils.replaceToken(newurl, token_name, "token");
+        let newpath = log_newurl.replace(baseURI, "/");
+        let send_url = log_newurl
+        log_newurl = utils.replaceRandom(log_newurl, random_names, "");
+        let cluster_results = utils.clusterURL(log_newurl);
+        let cluster_flag = cluster_results[0];
+        let cluster_url = cluster_results[1];
+        let url_map = loadfile('ev_url_map.json');
+        url_map = url_map?url_map:[];
+        if(!url_map.includes(newpath)){
+            url_map.push(newpath);
+            printObject(url_map, "ev_url_map.json");
+        }
+        //updategenescore(seq[i], GENE_PENALTY_MILD);
+        if(DEBUG_PRINT) console.log("check new url: ", newurl);
+        let navigationPath = utils.GenerateNavigationPath(nav_edge, log_url, log_newurl);
+        if((MODE == 1 || MODE == 4) && elementtag == "a"){
+            navigationSet.push(navigationPath);
+        }
+        //total_score += SEQ_REWARD_TMP; //should change this parameter later
+        if(visitedpagestable[log_newurl] === undefined && utils.check_url_keywords(log_newurl , heavy_pages)) {    // make sure no duplicates are inserted in queue
+            let seed_name = log_newurl.split("?")[0];
+            seed_name = seed_name.split("#")[0];
+            seed_name = utils.extractLogName(seed_name, baseURI);
+            let pagescore = -1;
+            //pagescore = Math.floor(Math.random() * 100); //generate random score for each page, and sort pages based on the score (randomly shuffle)
+            if(elementtag == 'a'){
+                if(ENABLE_KAFKA) {
+                    await sendtotopic(producer, send_url, KAFKA_PAGETOPIC, pagescore);
+                    if(log_newurl != send_url) visitedpagestable[log_newurl] = pagescore;
+                    if(cluster_flag) visitedpagestable[cluster_url] = pagescore;
+                }else {
+                    visitedpagestable[send_url] = pagescore;
+                    visitedpagestable[log_newurl] = pagescore;
+                    visitedpagestable[cluster_url] = pagescore;
+                    pqueue.push({key: send_url, val: pagescore});
+                    printObject(pqueue, 'pqueue.json');
+                }
+            }
+            else{
+                visitedpagestable[log_newurl] = 1;
+            }
+            printObject(visitedpagestable, "visitedpages.json");
+            //total_score += SEQ_REWARD_TMP;
+        }
+    }
+}
+
 // Evaluates fitness for a sequence with reward shaping
 // avoid seq with large wait times due to typing a non-typeable element (because of js, testcafe waits for element to be come typeable)
 //      --> add time in the fitness evaluation process. Ex. fitness = rewards/totaltimetaken
@@ -1060,12 +1111,10 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
     var total_score = SEQ_INIT_SCORE;
     let element_info = {};
     let seq_log = [];
-    let new_page_events = [];
+    let new_page_events = []
     let url_map = loadfile("ev_url_map.json");
-    let log_url = utils.replaceToken(currenturl, token_name, "token");
     //let log_name = utils.extractLogName(log_url, baseURI);
     let log_name = cache.log + ".json";
-    let ref_url = "";
     let payloads = [];
     typed_texts = [];
     seq_log = utils.loadLogFile(log_name, USER_MODE, LOG_FOLDER);
@@ -1217,8 +1266,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             console.log(css_string + "--->" + interactions[action_id]);
         }
         timestamp = new Date().getTime();
-        // Done: Check if the interaction is novel, reward novelty value if yes
-        // Archive the interaction, initialize novelty reward value, decrease (exponentially?) with generation/iteration (similar to simulated annealing)
+        //we use rightclick to record the information of an element that leading to another page.
         try{
             await t.rightClick(element);
             page_events = await eventRecord();
@@ -1273,7 +1321,12 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             newurl = newurl.split("#")[0];
             if(newurl == currenturl){
                 if(rrweb.eventURL(page_events) != 0){ //interactions like clicking on the save button, it renews the page but do not change the URL.
-                     
+                    page_renew = 1;
+                    console.log("page has been renewed");
+                    new_element_info = rrweb.handleDOM(page_events);
+                    let results = rrweb.record_addtional_element(page_events, new_element_info);
+                    new_element_info = results[0];
+                    new_elements = results[1];
                 }
                 else{
                     id_list = rrweb.event_analyze(page_events);
@@ -1283,14 +1336,14 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                 }
                 //console.log("new elements length: ", new_elements.length);
                 if(new_elements.length != 0 && !checked_hidden.includes(index)){
+                    //for elements revealed by ajax
                     let new_elements_selector;
+                    let tmp_info = element_info
+                    if (page_renew == 1) {
+                        tmp_info = new_element_info
+                    }
                     try{
-                        if(page_renew == 1){
-                            new_elements_selector = await check_new_elements(t, new_elements, new_element_info, allelements, index);
-                        }
-                        else{
-                            new_elements_selector = await check_new_elements(t, new_elements, element_info, allelements, index);
-                        }
+                        new_elements_selector = await check_new_elements(t, new_elements, tmp_info, allelements, index);
                     }catch(e){
                         console.error(e);
                         console.log("failed to generate element selectors")
@@ -1320,17 +1373,16 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                     utils.logObject(seq_log, log_name, LOG_FOLDER);
                     continue;
                 }
-                new_page_events = await eventRecord();
+                //new_page_events = await eventRecord();
             }
             payloads = await catchPayload();
             payload_detection(payloads, newurl);
             req_count = checkRequestLogs();
             if(DEBUG_PRINT) console.log("number of requests generated: ", req_count);
             if (req_count > 0){
-                payloads = await catchPayload();
-                payload_detection(payloads, newurl);
                 total_score = await capture_request_url(req_count, currenturl, newurl, elementtag, total_score, nav_edge);
             }else {
+                //for hidden elements only revealed by javascript
                 if(!checked_hidden.includes(index) && rrweb.check_dom_changes(page_events))
                 {
                     if(DEBUG_PRINT) console.log("checking hidden elements");
@@ -1433,70 +1485,10 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         }
 
         if(id_list.length != 0 && page_renew == 1){
-            element_info = new_element_info;
+            element_info = new_element_info; //if page is renewed, update the element_info tracker
         }
         // Check if action lead to routing to another page. Navigate back to currenturl in this case
-        if (newurl != currenturl) {
-            let log_newurl = utils.replaceToken(newurl, token_name, "token");
-            let newpath = log_newurl.replace(baseURI, "/");
-            let send_url = log_newurl
-            log_newurl = utils.replaceRandom(log_newurl, random_names, "");
-            let cluster_results = utils.clusterURL(log_newurl);
-            let cluster_flag = cluster_results[0];
-            let cluster_url = cluster_results[1];
-            if(!url_map.includes(newpath)){
-                url_map.push(newpath);
-                printObject(url_map, "ev_url_map.json");
-            }
-            //updategenescore(seq[i], GENE_PENALTY_MILD);
-            if(DEBUG_PRINT) console.log("check new url: ", newurl);
-            let navigationPath = utils.GenerateNavigationPath(nav_edge, log_url, log_newurl);
-            if((MODE == 1 || MODE == 4) && elementtag == "a"){
-                navigationSet.push(navigationPath);
-            }
-			//total_score += SEQ_REWARD_TMP; //should change this parameter later
-            if(visitedpagestable[log_newurl] === undefined && utils.check_url_keywords(log_newurl , heavy_pages)) {    // make sure no duplicates are inserted in queue
-                let seed_name = log_newurl.split("?")[0];
-                seed_name = seed_name.split("#")[0];
-                seed_name = utils.extractLogName(seed_name, baseURI);
-                let pagescore = -1;
-                //pagescore = Math.floor(Math.random() * 100); //generate random score for each page, and sort pages based on the score (randomly shuffle)
-                if(elementtag == 'a'){
-                    new_page_events = [];
-                    if(ENABLE_KAFKA) {
-                        await sendtotopic(producer, send_url, KAFKA_PAGETOPIC, pagescore);
-                        if(log_newurl != send_url) visitedpagestable[log_newurl] = pagescore;
-                        if(cluster_flag) visitedpagestable[cluster_url] = pagescore;
-                    }else {
-                        visitedpagestable[send_url] = pagescore;
-                        visitedpagestable[log_newurl] = pagescore;
-                        visitedpagestable[cluster_url] = pagescore;
-                        pqueue.push({key: send_url, val: pagescore});
-                        printObject(pqueue, 'pqueue.json');
-                    }
-                }
-                else{
-                    visitedpagestable[log_newurl] = 1;
-                }
-                printObject(visitedpagestable, "visitedpages.json");
-                //total_score += SEQ_REWARD_TMP;
-            }
-            //console.log(currenturl);
-            //reclick on the same element, trying to detect dynamic values in a url
-            await t.navigateTo(currenturl);
-            navtime = new Date().getTime();
-            page_events = await eventRecord();
-            //check whether rrweb successfully capture the events, if not, reload the page
-            if(!rrweb.checkEventCapture(page_events, 2)){
-                await t.eval(() => location.reload(true));
-                page_events = await eventRecord();
-            }
-            newurl = currenturl;
-            element_info = rrweb.handleDOM(page_events);
-            element_info = rrweb.DOM_addtional_element(page_events, element_info);
-            seq_log.push({css_locators: "navigate", timestamp: navtime}); 
-            utils.logObject(seq_log, log_name, LOG_FOLDER);
-        }
+        await add_page_to_queue(newurl, currenturl, elementtag, nav_edge);
         utils.logObject(navigationSet, cache.navSet + ".json", SET_FOLDER);
         navigationSet = pathoptimizer.pathSelection(navigationSet);
         navSet_incrementor();
@@ -1568,7 +1560,7 @@ const mutate = async function (seq_population, s_size, allelements) {
     // dependantelements[JSON.stringify({e_id: index, a_id: action_id})] --> returns list of element_id
     var seq;
     let flag = 1;
-    let cutOffLength = Math.floor(s_size * 2);
+    let cutOffLength = Math.floor(s_size * 3);
     let url_map = loadfile('ev_url_map.json');
     url_map = url_map?url_map:[];
     for(let i=0; i< seq_population.length; i++) {
@@ -1580,7 +1572,6 @@ const mutate = async function (seq_population, s_size, allelements) {
             if (dependantelements[JSON.stringify({e_id: gene.element_id})] !== undefined) {
                 var dep_ele = dependantelements[JSON.stringify({e_id: gene.element_id})]
                 if (dep_ele.length === 0) { continue; }
-                let counter = 0;
                 let dep_length = Math.floor(dep_ele.length * Math.random() + 1);
                 for(let k = 0; k < dep_length; k ++){
                     for(let t = 0; t < 50; t ++){ 
@@ -1588,7 +1579,7 @@ const mutate = async function (seq_population, s_size, allelements) {
                         var randid = Math.floor(Math.random()*dep_ele.length)
                         var ele_id = dep_ele[randid];
                         if(ele_id > allelements.length - 1){
-                            if(DEBUG_PRINT) console.log("surpass the limit");
+                            if(DEBUG_PRINT) console.log("we loss track of this dependent element");
                             continue;
                         }
                         let dep_element = allelements[ele_id].element;
@@ -1600,6 +1591,7 @@ const mutate = async function (seq_population, s_size, allelements) {
                                 console.log(e);
                                 dep_attr = {};
                             }
+                            //check whether this element contains visited href already
                             if(dep_attr.hasOwnProperty('href')){
                                 let href = dep_attr.href;
                                 if(href.includes('http') && !href.includes(baseURI)){
@@ -1931,6 +1923,15 @@ const analyze_ascores = function(average_scores){
     return 1;
 }
 
+const analyze_seq_population = function(new_seq_population, currenturl, iter){
+    appendObjecttoFile("url: " + currenturl, 'new_seq_population.txt');
+    appendObjecttoFile("----------------------------------------", 'new_seq_population.txt');
+    for(let i = 0; i < new_seq_population.length - 1; i++)
+    {
+        if(DEBUG_PRINT) appendObjecttoFile(new_seq_population[i], 'new_seq_population.txt');
+    }
+}
+
 const runevolutionarycrawler = async function (t) {
     console.log("crawler starts");
     let currenturl, page_element_data, allelements, hiddenelementids, visibleelementids, exploreditem;
@@ -2025,21 +2026,18 @@ const runevolutionarycrawler = async function (t) {
             }
             try{
                 new_seq_population = await mutate(new_seq_population, s_size, allelements);
+                new_seq_population = sanitizePopulation(new_seq_population);
             }catch(e){
                 console.error(e);
             }
             // 3. Sanitize the population - ex. prevent consecutive duplicate genes in seq
-            new_seq_population = sanitizePopulation(new_seq_population);
             // 4. Evaluate fitness
             try{
                 new_seq_population = await evaluateFitness(t, new_seq_population, allelements, hiddenelementids, currenturl);
             }catch(e){
                 console.error(e);
             }
-            for(let i = 0; i < new_seq_population.length - 1; i++)
-            {
-                if(DEBUG_PRINT) console.log(new_seq_population[i])
-            }
+            //analyze_seq_population(new_seq_population, currenturl, i);
             // save evolution state
             // saveEvolutionState(seq_population, {generation: i});
             //checked_hidden = [];

@@ -1,5 +1,5 @@
 {
-    "wordpress":"http://webapp1.csl.toronto.edu:8080/wp-login.php",
+    "wordpress":"http://authzee1.csl.toronto.edu:8080/wp-login.php",
     "wordpress2":"http://wordpressnf5.csl.toronto.edu/wp-login.php",
     "drupal":"http://webapp1.csl.toronto.edu:9200/user/login",
     "humhub":"http://webapp1.csl.toronto.edu:8300/index.php?r=user%2Fauth%2Flogin",
