@@ -51,7 +51,7 @@ var urlobj = new URL(baseURI);
 const PORT = urlobj.port?urlobj.port:'80';
 
 const parameters = {
-    small: [10, 5, 8], //6
+    small: [10, 5, 8], //used to be 5
     medium: [10, 6, 6],
     Large: [10, 6, 6]
 }
@@ -2096,7 +2096,7 @@ test
         // this includes searching for both get<a> and post<button/input/form> methods
         await t.setNativeDialogHandler(() => true);  // handle pop up dialog boxes;
         await t.maximizeWindow();  // less complex ui when the window size is largest
-        // baseURI = await getURL();       
+        // baseURI = await getURL();
         if(!loadCache()) {
             saveConfig();
             console.log('Cache files not detected. \nStarting scan from scratch...')
