@@ -51,7 +51,7 @@ var urlobj = new URL(baseURI);
 const PORT = urlobj.port?urlobj.port:'80';
 
 const parameters = {
-    small: [10, 5, 8], //used to be 5
+    small: [10, 8, 6], //used to be 5
     medium: [10, 6, 6],
     Large: [10, 6, 6]
 }
@@ -68,11 +68,11 @@ const SEQ_REWARD_HIDDEN = 15; //15
 const SEQ_REWARD_TYPEABLE = 20; //20
 const SEQ_REWARD_UPLOADFILE = 20;
 const SEQ_REWARD_SELECT = 12;
-const SEQ_PENALTY_HIGH = -10;
-const SEQ_PENALTY_SMALL = -2;
-const SEQ_PENALTY_MEDIUM = -6;
+const SEQ_PENALTY_HIGH = -20;
+const SEQ_PENALTY_SMALL = -10;
+const SEQ_PENALTY_MEDIUM = -15;
 
-const RAND_POP_GENERATE = 0.5;
+const RAND_POP_GENERATE = 0.3;
 
 var num_runs = 0;
 
@@ -598,7 +598,7 @@ const getActionProbabilistically = function() {
 // Initialize the algorithm with randomly generated population of sequences
 // returns array of object {gene array, fs}. 
 // A gene is an object containing element id and action id. fs is fitness score of that gene.
-const initialize_EA = async function (visibleelementids, p_size, s_size, allelements = {}) {
+const initialize_EA = async function (visibleelementids, p_size, s_size, allelements = {}, submitelementids=[]) {
     // No repetitions?
     var seq_population = []
     let sequence_size = 0;
@@ -625,7 +625,10 @@ const initialize_EA = async function (visibleelementids, p_size, s_size, allelem
                 flag = false;
                 rand_visible_index = Math.floor(Math.random() * visibleelementids.length);
                 id = visibleelementids[rand_visible_index];
-                let element = allelements[id].element; 
+                if(genescoremap[Number(id)] == undefined || genescoremap[Number(id)] >= 1){
+                    break;
+                }
+/*                 let element = allelements[id].element; 
                 try{
                     var attr = await element.attributes;
                 }
@@ -649,12 +652,16 @@ const initialize_EA = async function (visibleelementids, p_size, s_size, allelem
                             break;
                         }   
                     }
-                }
+                } */
             }while((id in seq.map(g=>{return g.element_id})) || flag);
             action_id = getActionProbabilistically();
-            gene = {element_id: id, action_id: action_id, css_selector: ''};
+            gene = {element_id: id, action_id: action_id, css_selector: '', typed_texts: []};
             seq.push(gene);
         }
+        let rand_num = Math.floor(Math.random() * (submitelementids.length));
+        let submit_id = submitelementids[rand_num];
+        let submit_gene = {element_id: submit_id, action_id: 0, css_selector: '', typed_texts: []};
+        seq.push(submit_gene);
         seq_population.push({seq: seq, fs: 0});     // fs is fitness score
     }
     return seq_population;
@@ -1100,7 +1107,9 @@ const add_page_to_queue = async function(newurl, currenturl, elementtag, nav_edg
             printObject(visitedpagestable, "visitedpages.json");
             //total_score += SEQ_REWARD_TMP;
         }
+        return true
     }
+    return false
 }
 
 // Evaluates fitness for a sequence with reward shaping
@@ -1273,6 +1282,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         }
         catch{
             if(DEBUG_PRINT) console.log("click not succeed");
+            updategenescore(seq[i], GENE_PENALTY_SEVERE);
             total_score += SEQ_PENALTY_SMALL;
             continue;
         }
@@ -1308,6 +1318,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             }
             catch{
                 if(DEBUG_PRINT) console.log("click not succeed");
+                updategenescore(seq[i], GENE_PENALTY_SEVERE);
                 total_score += SEQ_PENALTY_SMALL;
                 continue;
             }
@@ -1359,18 +1370,19 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             }
             else{
                 const hostname = new URL(newurl).hostname; const basehostname = new URL(baseURI).hostname;
+                navtime = new Date().getTime();
+                page_renew = 1;
+                await t.navigateTo(currenturl);
+                page_events = await eventRecord();
+                new_element_info = rrweb.handleDOM(page_events);
+                new_element_info = rrweb.DOM_addtional_element(page_events, new_element_info);
+                seq_log.push({css_locators: "navigate", timestamp: navtime}); 
+                utils.logObject(seq_log, log_name, LOG_FOLDER);
                 if (hostname !== basehostname) {
                     if(DEBUG_PRINT){console.log("Out of domain detected and avoided.")}
                     total_score += SEQ_PENALTY_HIGH;
-                    updategenescore(seq[i], GENE_PENALTY_SEVERE);  // avoid genes that take you outside domain
-                    navtime = new Date().getTime();
-                    await t.navigateTo(currenturl);
                     newurl = currenturl;
-                    page_events = await eventRecord();
-                    element_info = rrweb.handleDOM(page_events);
-                    element_info = rrweb.DOM_addtional_element(page_events, element_info);
-                    seq_log.push({css_locators: "navigate", timestamp: navtime}); 
-                    utils.logObject(seq_log, log_name, LOG_FOLDER);
+                    updategenescore(seq[i], GENE_PENALTY_SEVERE);  // avoid genes that take you outside domain
                     continue;
                 }
                 //new_page_events = await eventRecord();
@@ -1421,6 +1433,10 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                 total_score += SEQ_PENALTY_SMALL;
                 continue;
             }
+            if(seq[i].typed_texts == undefined){
+                seq[i].typed_texts = [];
+            }
+            seq[i].typed_texts.push(fuzz_string);
             total_score += SEQ_REWARD_TYPEABLE;
             typed_texts.push(fuzz_string);
             let temp_obj = xss_sources[currenturl];
@@ -1488,12 +1504,13 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             element_info = new_element_info; //if page is renewed, update the element_info tracker
         }
         // Check if action lead to routing to another page. Navigate back to currenturl in this case
-        await add_page_to_queue(newurl, currenturl, elementtag, nav_edge);
+        await add_page_to_queue(newurl, currenturl, elementtag, nav_edge)
+
         utils.logObject(navigationSet, cache.navSet + ".json", SET_FOLDER);
         navigationSet = pathoptimizer.pathSelection(navigationSet);
         navSet_incrementor();
     }
-    total_score = await random_clickon_submit_buttons(t, typed_texts, total_score, element_info, currenturl);
+    //total_score = await random_clickon_submit_buttons(t, typed_texts, total_score, element_info, currenturl);
     var t1 = new Date().getTime(); // timestamp 1
     // want solutions that take min amount of time or optimal length of seqs 
     // (ie. without any unnecessary element-action genes which adds to extra time)
@@ -1506,12 +1523,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
 }
 
 const updategenescore = function (gene, score) {
-    if (genescoremap[JSON.stringify(gene)] === undefined) {     // new gene
-        var noveltyscore = GENE_REWARD_NOVELTY;
-        genescoremap[JSON.stringify(gene)] = noveltyscore*score;
-    }else {
-        genescoremap[JSON.stringify(gene)] *= score;
-    }
+    genescoremap[Number(gene.element_id)] = score;
     printObject(genescoremap, 'genescoremap.json');
 }
 
@@ -1528,7 +1540,7 @@ function shuffleArray(array) {
 
 // crosses parent seqs randomly for more diversity
 // returns new population of seqs
-const crossover = async function (seq_population, s_size, visibleelementids, p_size, allelements = []) {
+const crossover = async function (seq_population, s_size, visibleelementids, p_size, allelements = [], submitelementids=[]) {
     var new_population = [];
     var parent1, parent2, n, child1, child2, randnum1, randnum2, n1, n2, parent1one, parent2one, parent1two, parent2two;
     var rand_seq_population = shuffleArray(seq_population);
@@ -1536,7 +1548,7 @@ const crossover = async function (seq_population, s_size, visibleelementids, p_s
     // new_population = new_population.concat(seq_population)
     n = rand_seq_population.length
     // crossover from previous generation to produce new children
-    for(let i=0; i < n/2; i++) {
+    for(let i=0; i < n / 2; i++) {
         parent1 = rand_seq_population[i].seq; parent2 = rand_seq_population[n-1-i].seq;
         n1 = parent1.length; n2 = parent2.length;
         // randnum1 = Math.floor(Math.random()*n1); randnum2 = Math.floor(Math.random()*n2);
@@ -1550,7 +1562,7 @@ const crossover = async function (seq_population, s_size, visibleelementids, p_s
     }
     // add some random sequences for explorations
     var random_p_size = Math.floor(p_size*RAND_POP_GENERATE);  // TODO: vary generating this 50% of population randomly with some feedback
-    var random_new_population = await initialize_EA(visibleelementids, random_p_size, s_size, allelements)  // generate random sequences
+    var random_new_population = await initialize_EA(visibleelementids, random_p_size, s_size, allelements, submitelementids)  // generate random sequences
     return new_population.concat(random_new_population);
 }
 
@@ -1646,8 +1658,19 @@ const mutate = async function (seq_population, s_size, allelements) {
     return seq_population
 }
 
+const find_available_gene = function (visibleelementids, allelements){
+    for(let i = 0; i < visibleelementids.length; i ++){
+        let rand_visible_index = Math.floor(Math.random() * visibleelementids.length);
+        let id = visibleelementids[rand_visible_index];
+        if(genescoremap[Number(id)] == undefined || genescoremap[Number(id)] >= 1){
+            return id;
+        }
+    }
+    return -1;
+}
+
 // sanitize the population based on predefined rules/constraints
-const sanitizePopulation = function (seq_population) {
+const sanitizePopulation = function (seq_population, visibleelementids, allelements) {
     var sanitized_population;
 
     sanitized_population = seq_population;
@@ -1660,8 +1683,8 @@ const sanitizePopulation = function (seq_population) {
         var seq = sanitized_population[i].seq
         var seen_genes = {}; var j = seq.length-1;
         while(j >= 0) {     // remove the duplicates that appear first in the seq
-            if (seen_genes[JSON.stringify(seq[j])] === undefined) {  // gene unique
-                seen_genes[JSON.stringify(seq[j])] = 1
+            if (seen_genes[seq[j].element_id] === undefined) {  // gene unique
+                seen_genes[seq[j].element_id] = 1
             }else {
                 //if(DEBUG_PRINT){console.log('removing duplicate gene');}
                 seq.splice(j,1)  // remove 1 element starting from index j
@@ -1673,20 +1696,29 @@ const sanitizePopulation = function (seq_population) {
     }
 
     // use genescoremap to determine which gene to remove - notvisible and taking too long;
+    //replace low score genes with higher ones
     for(let i=0; i< sanitized_population.length; i++) {     
         var seq = sanitized_population[i].seq
         var seen_genes = {}; var j = 0;
         while(j < seq.length) {
-            if (genescoremap[JSON.stringify(seq[j])] < 1) {  // remove low scoring genes in sequences;
-                if(DEBUG_PRINT){console.log('removing low scoring gene');}
-                seq.splice(j,1)  // remove 1 element starting from index j
-                j--;
+            if(genescoremap[Number(seq[j].element_id)] === undefined){
+                j ++;
+                continue;
+            }
+            if (genescoremap[Number(seq[j].element_id)] < 1) {  // remove low scoring genes in sequences;
+                let new_id = find_available_gene(visibleelementids, allelements);
+                if (new_id == -1){
+                    j ++;
+                    continue;
+                }
+                if(DEBUG_PRINT){console.log('replacing low scoring gene ' + seq[i].element_id + ' with ' + new_id);}
+                seq[j].element_id = new_id 
             }
             j++;
         }
         sanitized_population[i].seq = seq
     }
-
+    console.log("break point 1");
     return sanitized_population;
 }
 
@@ -1754,6 +1786,7 @@ const getallelementdata = async function (t, currenturl) {
     var allelements = []
     var hiddenelementids = []
     var visibleelementids = []
+    var submitelementids = []
     var element_css = [];
     let anchor_object = loadfile("ajax_elements.json");
     let dialog_events = [];
@@ -1807,6 +1840,10 @@ const getallelementdata = async function (t, currenturl) {
                 if(elementsOfInterest[i] != 'a') {await check_signin_button(element);} //check whether an element is a login button, if it is, we sign in at next iteration.
                 visibleelementids.push(allelements.length -1);
                 page_value ++;
+                let ele_attr = await element.attributes;
+                if(ele_attr['type'] == 'submit'){
+                    submitelementids.push(allelements.length -1);
+                }
             }
             else{
                 hiddenelementids.push(allelements.length -1); 
@@ -1816,9 +1853,10 @@ const getallelementdata = async function (t, currenturl) {
     if(num_elements == 0){
         login_status = 0; //if no elements detected, we might need to relogin
     }
+    console.log("number of submit elements: ", submitelementids.length);
     // printObject(hiddenelementids, 'hiddenelementids.json')
     // printObject(visibleelementids, 'visibleelementids.json')
-    return [allelements, hiddenelementids, visibleelementids]
+    return [allelements, hiddenelementids, visibleelementids, submitelementids]
 }
 
 const get_cookies = async function(t, currenturl){
@@ -1935,6 +1973,7 @@ const analyze_seq_population = function(new_seq_population, currenturl, iter){
 const runevolutionarycrawler = async function (t) {
     console.log("crawler starts");
     let currenturl, page_element_data, allelements, hiddenelementids, visibleelementids, exploreditem;
+    let submitelementids = [];
     var new_seq_population = [], seq_population = [];
     var p_size, s_size, iterations;
     let beginning = 0;
@@ -1953,7 +1992,7 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        //currenturl = "http://webapp2.csl.toronto.edu:8600/modules/system/admin.php?fct=preferences&op=show&confcat_id=12" // overwrite the current url value to test on single page
+        //currenturl = "http://authzee1.csl.toronto.edu:8080/wp-admin/user-new.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
@@ -1975,13 +2014,14 @@ const runevolutionarycrawler = async function (t) {
         allelements = page_element_data[0];
         hiddenelementids = page_element_data[1];
         visibleelementids = page_element_data[2];
+        submitelementids = page_element_data[3];
         console.log("exploit queue size = "+pqueue.size())
         // 1. Initialize    
         //seq_population = loadfile('seq_population.json')
         //new_seq_population = loadfile('new_seq_population.json')
         if (next_gen === 0 || seq_population===false || seq_population.length == 0) {
             try{
-                seq_population = await initialize_EA(visibleelementids, p_size, s_size, allelements);
+                seq_population = await initialize_EA(visibleelementids, p_size, s_size, allelements, submitelementids);
             }catch(e){
                 console.log("initialize fault: ", e)
             }
@@ -2019,15 +2059,16 @@ const runevolutionarycrawler = async function (t) {
             console.log("average_scores: ", average_scores);
             // 2. Crossover/mutation TODO: using dynamic feedback, probabilistically perform either crossover or mutation
             try{
-                new_seq_population = await crossover(seq_population, s_size, visibleelementids, p_size, allelements);
+                new_seq_population = await crossover(seq_population, s_size, visibleelementids, p_size, allelements, submitelementids);
             }catch(e){
                 console.error(e);
                 continue;
             }
             try{
                 new_seq_population = await mutate(new_seq_population, s_size, allelements);
-                new_seq_population = sanitizePopulation(new_seq_population);
+                new_seq_population = sanitizePopulation(new_seq_population, visibleelementids, allelements);
             }catch(e){
+                console.log("Failed to mutate or sanitize the population.")
                 console.error(e);
             }
             // 3. Sanitize the population - ex. prevent consecutive duplicate genes in seq

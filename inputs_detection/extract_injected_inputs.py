@@ -5,6 +5,7 @@ import json
 
 successful_injections = dict()
 appname = ["wordpress", "drupal", "kanboard", "humhub", "hotcrp", "phpbb", "opencart", "dokuwiki", "impresscms"]
+folder_name = sys.argv[1]
 for app in appname:
     search_load_sim = "s" + app[0:2]
     search_load_evo = "e" + app[0:2]
@@ -38,7 +39,7 @@ def process_line(line, identifier = "sim"):
                 successful_injections[identifier].append(num)
 
 def process_file():
-    with open('data2/log.txt') as f:
+    with open(folder_name + '/log.txt') as f:
         lines = f.readlines()
         for line in lines:
             #process_line(line, "fuzz")
@@ -63,8 +64,8 @@ def write_file(folder, name, data):
 #        print(filename)
 #        command = "mysqlbinlog --base64-output=decode-rows --verbose " + filename + " > data2/log.txt"
 #        os.system(command)
-temp_injections = load_file("data2/", "insertions.json")
+temp_injections = load_file(folder_name + "/", "insertions.json")
 if temp_injections != False:
     successful_injections = temp_injections
 process_file()
-write_file("data2/", "insertions" + ".json", successful_injections)
+write_file(folder_name + '/', "insertions" + ".json", successful_injections)
