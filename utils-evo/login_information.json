@@ -5,7 +5,7 @@
     "humhub":"http://webapp1.csl.toronto.edu:8300/index.php?r=user%2Fauth%2Flogin",
     "impresscms":"http://webapp1.csl.toronto.edu:8600/user.php",
     "matomo":"http://matomoxss.csl.toronto.edu/",
-    "hotcrp":"http://webapp1.csl.toronto.edu:8500/testconf/",
+    "hotcrp":"http://webapp2.csl.toronto.edu:8500/testconf/",
     "gitlab":"http://gitlab1105.csl.toronto.edu/users/sign_in",
     "opencart":"http://webapp1.csl.toronto.edu:8800/test/",
     "dokuwiki":"http://webapp1.csl.toronto.edu:8400/doku.php?id=wiki:welcome&do=login",
