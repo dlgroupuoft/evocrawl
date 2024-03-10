@@ -14,6 +14,9 @@ import PriorityQueue from './pqueue'
 import { Selector, RequestLogger, ClientFunction, Role, t } from 'testcafe';
 import http from 'http';
 import {login, extractBaseUrl, extra_steps, second_login} from '../utils-evo/login';
+import { seq } from 'async';
+import { round } from 'lodash';
+import { execSync } from 'child_process';
 
 const applogin = require('./userroles.js');
 const login_info = require('../utils-evo/login_information.json');
@@ -25,6 +28,8 @@ const form_success = require("../utils-evo/form_success.json");
 const APPNAME = process.env.APPNAME?process.env.APPNAME:'gitlab'; // default gitlab
 const USER_MODE = process.env.USER_MODE?process.env.USER_MODE.toLowerCase():'a'; // default 'userA'
 const DATA_FOLDER = process.env.DATA_FOLDER?process.env.DATA_FOLDER:'data/'+APPNAME+'/';
+const INPUT_FOLDER = process.env.INSERT_FOLDER?process.env.INSERT_FOLDER:'inputs_detection/';
+const INPUT_FOLDER_DATA = INPUT_FOLDER + 'data/';
 const REPLAY = process.env.REPLAY?process.env.REPLAY:0;
 const MODE = process.env.MODE?process.env.MODE:3;
 const XSS_MODE = process.env.XSS_MODE?process.env.XSS_MODE:0;
@@ -62,12 +67,13 @@ const GENE_PENALTY_MILD = 0.9;
 const GENE_PENALTY_NONE = 1;
 
 const SEQ_INIT_SCORE = 100;
-const SEQ_REWARD_NEWREQ = 15;
+const SEQ_REWARD_NEWREQ = 10;
 const SEQ_REWARD_FORM = 40;
-const SEQ_REWARD_HIDDEN = 15; //15
-const SEQ_REWARD_TYPEABLE = 20; //20
+const SEQ_REWARD_HIDDEN = 10; //15
+const SEQ_REWARD_TYPEABLE = 10; //20
+const SEQ_REWARD_INSERT = 20;
 const SEQ_REWARD_UPLOADFILE = 20;
-const SEQ_REWARD_SELECT = 12;
+const SEQ_REWARD_SELECT = 10;
 const SEQ_PENALTY_HIGH = -20;
 const SEQ_PENALTY_SMALL = -10;
 const SEQ_PENALTY_MEDIUM = -15;
@@ -655,12 +661,12 @@ const initialize_EA = async function (visibleelementids, p_size, s_size, allelem
                 } */
             }while((id in seq.map(g=>{return g.element_id})) || flag);
             action_id = getActionProbabilistically();
-            gene = {element_id: id, action_id: action_id, css_selector: '', typed_texts: []};
+            gene = {element_id: id, action_id: action_id, css_selector: '', typed_texts: ''};
             seq.push(gene);
         }
         let rand_num = Math.floor(Math.random() * (submitelementids.length));
         let submit_id = submitelementids[rand_num];
-        let submit_gene = {element_id: submit_id, action_id: 0, css_selector: '', typed_texts: []};
+        let submit_gene = {element_id: submit_id, action_id: 0, css_selector: '', typed_texts: ''};
         seq.push(submit_gene);
         seq_population.push({seq: seq, fs: 0});     // fs is fitness score
     }
@@ -762,7 +768,7 @@ const check_new_elements = async function(t, new_elements = [], element_info = {
         }
         for(let j = 0; j < locators.length; j++){
             let tag = locators[j].split('[')[0];
-            if(elementsOfInterest.includes(tag) && (!locators[j].includes("[type=\"submit\"]"))){
+            if(elementsOfInterest.includes(tag)){
                 let new_selector = Selector(locators[j]);
                 if(new_elements_table.includes(locators[j])){
                     continue;
@@ -1433,10 +1439,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                 total_score += SEQ_PENALTY_SMALL;
                 continue;
             }
-            if(seq[i].typed_texts == undefined){
-                seq[i].typed_texts = [];
-            }
-            seq[i].typed_texts.push(fuzz_string);
+            seq[i].typed_texts = fuzz_string;
             total_score += SEQ_REWARD_TYPEABLE;
             typed_texts.push(fuzz_string);
             let temp_obj = xss_sources[currenturl];
@@ -1470,8 +1473,8 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                 total_score += SEQ_PENALTY_SMALL;
                 continue;
             }
-            //const optrand = Math.floor(Math.random()*optioncount) //assign random number may suffer from the all deletion problem
-            const optrand = 0;
+            const optrand = Math.floor(Math.random()*optioncount) //assign random number may suffer from the all deletion problem
+            //const optrand = 0;
             try{
                 await t.click(element);
                 await t.click(options.nth(optrand));
@@ -1505,7 +1508,6 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         }
         // Check if action lead to routing to another page. Navigate back to currenturl in this case
         await add_page_to_queue(newurl, currenturl, elementtag, nav_edge)
-
         utils.logObject(navigationSet, cache.navSet + ".json", SET_FOLDER);
         navigationSet = pathoptimizer.pathSelection(navigationSet);
         navSet_incrementor();
@@ -1586,7 +1588,7 @@ const mutate = async function (seq_population, s_size, allelements) {
                 if (dep_ele.length === 0) { continue; }
                 let dep_length = Math.floor(dep_ele.length * Math.random() + 1);
                 for(let k = 0; k < dep_length; k ++){
-                    for(let t = 0; t < 50; t ++){ 
+                    for(let t = 0; t < 50; t ++){
                         flag = false;
                         var randid = Math.floor(Math.random()*dep_ele.length)
                         var ele_id = dep_ele[randid];
@@ -1626,7 +1628,7 @@ const mutate = async function (seq_population, s_size, allelements) {
                         }
                     }
                     var action_id = getActionProbabilistically();
-                    seq.splice(j+1, 0, {element_id: dep_ele[randid], action_id: action_id, css_selector: ""});
+                    seq.splice(j+1, 0, {element_id: ele_id, action_id: action_id, css_selector: "", typed_texts: ""});
                     //if(DEBUG_PRINT){console.log('added dependent gene');}
                     // if(DEBUG_PRINT){console.log('new queue size = '+seq.length);}
                 }
@@ -1661,6 +1663,7 @@ const mutate = async function (seq_population, s_size, allelements) {
 const find_available_gene = function (visibleelementids, allelements){
     for(let i = 0; i < visibleelementids.length; i ++){
         let rand_visible_index = Math.floor(Math.random() * visibleelementids.length);
+        if (rand_visible_index >= visibleelementids.length) { rand_visible_index = visibleelementids.length - 1;}
         let id = visibleelementids[rand_visible_index];
         if(genescoremap[Number(id)] == undefined || genescoremap[Number(id)] >= 1){
             return id;
@@ -1718,7 +1721,6 @@ const sanitizePopulation = function (seq_population, visibleelementids, alleleme
         }
         sanitized_population[i].seq = seq
     }
-    console.log("break point 1");
     return sanitized_population;
 }
 
@@ -1962,12 +1964,42 @@ const analyze_ascores = function(average_scores){
 }
 
 const analyze_seq_population = function(new_seq_population, currenturl, iter){
+    const execSync = require('child_process').execSync;
+    const myshellscript = execSync('cd ' + INPUT_FOLDER + ' && sh ./c_insert.sh');
+    console.log(myshellscript.toString());
+    let inserted_inputs = utils.loadLogFile('a_insertions.json', USER_MODE, INPUT_FOLDER_DATA);
+    let key_inputs = 'e' + APPNAME[0] + APPNAME[1];
+    let inserted_inputs_key = inserted_inputs[key_inputs];
+    console.log(inserted_inputs_key);
+    for(let i = 0; i < new_seq_population.length; i++)
+    {   
+        console.log(i, "/", new_seq_population.length)
+        let success = 0;    
+        let sequence = new_seq_population[i].seq;
+        for(let j = 0; j < sequence.length; j++)
+        {   
+            if(sequence[j].typed_texts == undefined){
+                continue;
+            }
+            if(sequence[j].typed_texts.length > 0){
+                let tried_texts =  sequence[j].typed_texts;
+                console.log(tried_texts)
+                if(inserted_inputs_key.includes(tried_texts)){
+                    new_seq_population[i].fs += SEQ_REWARD_INSERT;
+                    success = 1;
+                }
+            }
+        }
+        if(success == 1){
+            console.log("inserted input detected");
+            new_seq_population[i].fs += SEQ_REWARD_FORM;
+        }
+        console.log("finish current round");
+    }
+    //printObject(new_seq_population, 'new_seq_population.json');
     appendObjecttoFile("url: " + currenturl, 'new_seq_population.txt');
     appendObjecttoFile("----------------------------------------", 'new_seq_population.txt');
-    for(let i = 0; i < new_seq_population.length - 1; i++)
-    {
-        if(DEBUG_PRINT) appendObjecttoFile(new_seq_population[i], 'new_seq_population.txt');
-    }
+    return new_seq_population;
 }
 
 const runevolutionarycrawler = async function (t) {
@@ -1992,13 +2024,13 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        //currenturl = "http://authzee1.csl.toronto.edu:8080/wp-admin/user-new.php" // overwrite the current url value to test on single page
+        currenturl = "http://authzee1.csl.toronto.edu:8080/wp-admin/user-new.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
         if(login_status == 0){
             await get_cookies(t, currenturl);
-            login_status = 1
+            login_status = 1;
         }
         beginning++;
         currenturl = utils.replaceToken(currenturl, token_name, token_value);
@@ -2066,19 +2098,25 @@ const runevolutionarycrawler = async function (t) {
             }
             try{
                 new_seq_population = await mutate(new_seq_population, s_size, allelements);
-                new_seq_population = sanitizePopulation(new_seq_population, visibleelementids, allelements);
             }catch(e){
                 console.log("Failed to mutate or sanitize the population.")
                 console.error(e);
+            }
+            try{
+                new_seq_population = sanitizePopulation(new_seq_population, visibleelementids, allelements);
+            }catch(e){
+                console.error(e);
+                console.log("Failed to sanitize the population");
             }
             // 3. Sanitize the population - ex. prevent consecutive duplicate genes in seq
             // 4. Evaluate fitness
             try{
                 new_seq_population = await evaluateFitness(t, new_seq_population, allelements, hiddenelementids, currenturl);
             }catch(e){
+                console.log("error occurs during the evaluation of sequences");
                 console.error(e);
             }
-            //analyze_seq_population(new_seq_population, currenturl, i);
+            new_seq_population = analyze_seq_population(new_seq_population, currenturl, i);
             // save evolution state
             // saveEvolutionState(seq_population, {generation: i});
             //checked_hidden = [];
