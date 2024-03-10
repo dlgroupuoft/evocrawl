@@ -1681,7 +1681,7 @@ const sanitizePopulation = function (seq_population, visibleelementids, alleleme
     // Done: 1. Must not exist repetitions of element-action gene in the seq
     // Done: 2. Remove the element-action gene that stalls the test execution or takes too long to respond
     //          - ex. typing in a non-typeable element
-
+    if(DEBUG_PRINT){console.log('sanitizing population...');}
     for(let i=0; i< sanitized_population.length; i++) {     // remove duplicate genes in sequences
         var seq = sanitized_population[i].seq
         var seen_genes = {}; var j = seq.length-1;
@@ -1697,25 +1697,33 @@ const sanitizePopulation = function (seq_population, visibleelementids, alleleme
         }
         sanitized_population[i].seq = seq
     }
-
+    if(DEBUG_PRINT){console.log('replacing lower scoring genes...');}
     // use genescoremap to determine which gene to remove - notvisible and taking too long;
     //replace low score genes with higher ones
     for(let i=0; i< sanitized_population.length; i++) {     
         var seq = sanitized_population[i].seq
-        var seen_genes = {}; var j = 0;
+        var seen_genes = {}; 
+        var j = 0;
         while(j < seq.length) {
             if(genescoremap[Number(seq[j].element_id)] === undefined){
                 j ++;
                 continue;
             }
             if (genescoremap[Number(seq[j].element_id)] < 1) {  // remove low scoring genes in sequences;
-                let new_id = find_available_gene(visibleelementids, allelements);
+                let new_id = -1;
+                try{
+                    new_id = find_available_gene(visibleelementids, allelements);
+                }catch(e){
+                    console.log("failed to find available gene, need to fix this bug");
+                    console.error(e);
+                    new_id = -1;
+                }
                 if (new_id == -1){
                     j ++;
                     continue;
                 }
-                if(DEBUG_PRINT){console.log('replacing low scoring gene ' + seq[i].element_id + ' with ' + new_id);}
-                seq[j].element_id = new_id 
+                seq[j].element_id = new_id;
+                if(DEBUG_PRINT){console.log('replacing low scoring gene ' + seq[j].element_id + ' with ' + new_id);}
             }
             j++;
         }
@@ -1999,6 +2007,7 @@ const analyze_seq_population = function(new_seq_population, currenturl, iter){
     //printObject(new_seq_population, 'new_seq_population.json');
     appendObjecttoFile("url: " + currenturl, 'new_seq_population.txt');
     appendObjecttoFile("----------------------------------------", 'new_seq_population.txt');
+    appendObjecttoFile(new_seq_population, 'new_seq_population.txt');
     return new_seq_population;
 }
 
