@@ -665,10 +665,12 @@ const initialize_EA = async function (visibleelementids, p_size, s_size, allelem
             gene = {element_id: id, action_id: action_id, css_selector: '', typed_texts: ''};
             seq.push(gene);
         }
-        let rand_num = Math.floor(Math.random() * (submitelementids.length));
-        let submit_id = submitelementids[rand_num];
-        let submit_gene = {element_id: submit_id, action_id: 0, css_selector: '', typed_texts: ''};
-        seq.push(submit_gene);
+        if(submitelementids.length > 0){
+            let rand_num = Math.floor(Math.random() * (submitelementids.length));
+            let submit_id = submitelementids[rand_num];
+            let submit_gene = {element_id: submit_id, action_id: 0, css_selector: '', typed_texts: ''};
+            seq.push(submit_gene);
+        }
         seq_population.push({seq: seq, fs: 0});     // fs is fitness score
     }
     return seq_population;
@@ -1171,12 +1173,17 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         let id_list = [];
         let id_list_right = [];
         let index = seq[i].element_id;
-        if(DEBUG_PRINT){console.log("Evaluating Gene "+i)}  
-        if(index > allelements.length - 1){
+        if(DEBUG_PRINT){console.log("Evaluating Gene "+ (i + 1) + '/' + seq.length);}          
+        if(index == undefined || index > allelements.length - 1){
             console.log("gene index surpass the limit, need to fix the bug");
             continue;
         }
-        updategenescore(seq[i], GENE_PENALTY_NONE);     // initialize novelty points if the gene is new
+        try{
+            updategenescore(seq[i], GENE_PENALTY_NONE); // initialize novelty points if the gene is new
+        }catch(e){
+            console.log(e);
+            console.log("failed to update gene score");
+        }
         let element = allelements[index].element;
         let new_elements = [];
         /*if(temp_identifier == 0){
@@ -1208,9 +1215,13 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         let eleInnerText_lower = eleInnerText.toLowerCase();
         seq[i].css_selector = css_string;
         css_string = css_string + eleInnerText_lower;
+        if(DEBUG_PRINT){
+            console.log(css_string);
+        }
         if((!utils.check_url_keywords(css_string, heavy_pages) && elementtag == "a") || !utils.check_url_keywords(css_string, logout_keywords)){
             //total_score += SEQ_PENALTY_MEDIUM;
             updategenescore(seq[i], GENE_PENALTY_SEVERE/2);
+            if(DEBUG_PRINT) {console.log("skip heavy pages and logout keywords");}
             continue;
         }
         if(elementattr.hasOwnProperty('href')){
@@ -1278,9 +1289,6 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             seq[i].action_id = 4;
         }
         var action_id = seq[i].action_id;
-        if(DEBUG_PRINT){
-            console.log(css_string + "--->" + interactions[action_id]);
-        }
         timestamp = new Date().getTime();
         //we use rightclick to record the information of an element that leading to another page.
         try{
@@ -1513,6 +1521,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         navigationSet = pathoptimizer.pathSelection(navigationSet);
         navSet_incrementor();
     }
+    if(DEBUG_PRINT) console.log("finish evaluating one sequence");
     //total_score = await random_clickon_submit_buttons(t, typed_texts, total_score, element_info, currenturl);
     var t1 = new Date().getTime(); // timestamp 1
     // want solutions that take min amount of time or optimal length of seqs 
