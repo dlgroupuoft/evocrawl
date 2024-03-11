@@ -17,7 +17,7 @@ if [ -z "$1" ]
     REPLAY=0
     DATA_FOLDER=$PWD/../data/$1/
     DATA_FOLDER_EV2=$PWD/../data/$1/ev_instance_2/
-    INSERT_FOLDER=$PWD/../data/$1/inputs_detection/
+    INSERT_FOLDER=$PWD/../inputs_detection/
     rm -rf $PWD/../data/$1
     mkdir -p ${DATA_FOLDER}sim_log
     mkdir -p ${DATA_FOLDER}ev_log
