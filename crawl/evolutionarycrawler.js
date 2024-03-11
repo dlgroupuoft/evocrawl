@@ -30,6 +30,7 @@ const USER_MODE = process.env.USER_MODE?process.env.USER_MODE.toLowerCase():'a';
 const DATA_FOLDER = process.env.DATA_FOLDER?process.env.DATA_FOLDER:'data/'+APPNAME+'/';
 const INPUT_FOLDER = process.env.INSERT_FOLDER?process.env.INSERT_FOLDER:'inputs_detection/';
 const INPUT_FOLDER_DATA = INPUT_FOLDER + 'data/';
+const INPUTS_DETECTION = process.env.INPUTS_DETECTION?process.env.INPUTS_DETECTION:0;
 const REPLAY = process.env.REPLAY?process.env.REPLAY:0;
 const MODE = process.env.MODE?process.env.MODE:3;
 const XSS_MODE = process.env.XSS_MODE?process.env.XSS_MODE:0;
@@ -2033,7 +2034,7 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        currenturl = "http://authzee1.csl.toronto.edu:8080/wp-admin/user-new.php" // overwrite the current url value to test on single page
+        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/user-new.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
@@ -2125,7 +2126,7 @@ const runevolutionarycrawler = async function (t) {
                 console.log("error occurs during the evaluation of sequences");
                 console.error(e);
             }
-            new_seq_population = analyze_seq_population(new_seq_population, currenturl, i);
+            if(Number(INPUTS_DETECTION) == 1) {new_seq_population = analyze_seq_population(new_seq_population, currenturl, i);}
             // save evolution state
             // saveEvolutionState(seq_population, {generation: i});
             //checked_hidden = [];
