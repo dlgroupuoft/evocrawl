@@ -1478,7 +1478,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
             if(DEBUG_PRINT) console.log("select");
             const options = element.find('option');
             const optioncount = await options.count;
-            if(optioncount <= 0){   // no options for the select dropdown element
+            if(optioncount <= 0 || optioncount > 10){   // no options for the select dropdown element, do not change element with too many options
                 updategenescore(seq[i], GENE_PENALTY_MILD);
                 total_score += SEQ_PENALTY_SMALL;
                 continue;
@@ -1733,8 +1733,8 @@ const sanitizePopulation = function (seq_population, visibleelementids, alleleme
                     j ++;
                     continue;
                 }
-                seq[j].element_id = new_id;
                 if(DEBUG_PRINT){console.log('replacing low scoring gene ' + seq[j].element_id + ' with ' + new_id);}
+                seq[j].element_id = new_id;
             }
             j++;
         }
@@ -1971,15 +1971,15 @@ const get_cookies = async function(t, currenturl){
 
 const analyze_ascores = function(average_scores){
     let len = average_scores.length;
-    if(average_scores[len - 1] <= 80){
+    /* if(average_scores[len - 1] <= 80){
         return 0;
-    }
-    /*if(len >= 2){
-        if(average_scores[len - 1] == average_scores[len - 2]){
-            return 0;
-        }
     } */
-    return 1;
+    if(len >= 2){
+        if(average_scores[len - 1] <= average_scores[len - 2]){
+            return false;
+        }
+    }
+    return true;
 }
 
 const analyze_seq_population = function(new_seq_population, currenturl, iter){
@@ -2044,7 +2044,7 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options.php" // overwrite the current url value to test on single page
+        //currenturl = "http://webapp2.csl.toronto.edu:8080/wp-admin/options.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
@@ -2104,7 +2104,7 @@ const runevolutionarycrawler = async function (t) {
                 if(!analyze_ascores(average_scores)){
                     console.log("average_scores: ", average_scores);
                     console.log("fitness function get stuck, transit to next page")
-                    //break;
+                    break;
                 }
                 printObject(seq_population, 'seq_population.json');   // save current population state
             }
