@@ -869,11 +869,11 @@ const form_submission_check = async function(page_html, form_url, form_method, l
     let sanitized_page = [];
     let end_list = [];
     let form_flag = 0;
-    try{
+    /* try{
         end_list = utils.extractTextFromHTML(page_html, 1);
     }catch{
         console.log("falied to extract text from html");
-    }
+    } */
     let end_flag = 0;
     //console.log(typed_texts);
     //printObject(end_list, "end_list.json");
@@ -886,7 +886,7 @@ const form_submission_check = async function(page_html, form_url, form_method, l
         }
     }
     printObject(form_texts, "ev_form_texts.json");
-    for(let i = 0; i < typed_texts.length; i ++){
+    /* for(let i = 0; i < typed_texts.length; i ++){
         let text = typed_texts[i];
         text = text.split('\\t').join('').split('\\n').join('').split('\\r').join('');
         text = text.replace(/[^a-z0-9]/gi, '');
@@ -918,7 +918,7 @@ const form_submission_check = async function(page_html, form_url, form_method, l
             printObject(ev_forms, "ev_forms.json");
         }
         appendObjecttoFile(typed_texts, "ev_typed_texts.txt");
-    }
+    } */
 }
 
 const capture_request_url = async function(req_count, currenturl, newurl, elementtag, total_score, nav_edge){
@@ -956,7 +956,8 @@ const capture_request_url = async function(req_count, currenturl, newurl, elemen
                 ev_forms[log_url] = tmp_obj;
                 printObject(ev_forms, "ev_forms.json");
                 //console.log(form_action);
-                page_html = await getPageHTML();
+                //page_html = await getPageHTML();
+                page_html = "";
                 await form_submission_check(page_html, form_action, 'post', log_url);
             }
             const _hostname = new URL(req.url).hostname; const _basehostname = new URL(baseURI).hostname;
@@ -1797,7 +1798,7 @@ const check_signin_button = async function(element = {}){
     css_str = css_str.toLowerCase().replace(/[^a-z0-9]/gi, '');
     //console.log(css_str);
     if(css_str.includes("login") || css_str.includes("signin")){
-        console.log("Sigin button detected, need to relogin");
+        console.log("Sigin button detected, need to relogin: ", css_str);
         login_status = 0;
     }
 }
@@ -2043,7 +2044,7 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/user-new.php" // overwrite the current url value to test on single page
+        currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
@@ -2189,7 +2190,6 @@ test
             //await extra_steps(t, APPNAME, login_info[APPNAME]);
         await get_cookies(t, login_info[APPNAME]);
         login_status = 1;
-        let redirect_url = await getURL();
         // Explore user actions on each page/url
         // this includes searching for both get<a> and post<button/input/form> methods
         await t.setNativeDialogHandler(() => true);  // handle pop up dialog boxes;
