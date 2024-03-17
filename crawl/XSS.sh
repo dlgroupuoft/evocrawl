@@ -13,12 +13,13 @@ if [ -z "$1" ]
     BLIND=2
     TOKEN_MODE=0
     INPUTS_DETECTION=1
-    MODE=3
+    MODE=0 #3
     REPLAY=0
     DATA_FOLDER=$PWD/../data/$1/
     DATA_FOLDER_EV2=$PWD/../data/$1/ev_instance_2/
     INSERT_FOLDER=$PWD/../inputs_detection/
     rm -rf $PWD/../data/$1
+    rm -r $INSERT_FOLDER/data/*
     mkdir -p ${DATA_FOLDER}sim_log
     mkdir -p ${DATA_FOLDER}ev_log
     mkdir -p ${DATA_FOLDER}sim_set

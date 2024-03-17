@@ -69,7 +69,7 @@ const GENE_PENALTY_NONE = 1;
 
 const SEQ_INIT_SCORE = 100;
 const SEQ_REWARD_NEWREQ = 10;
-const SEQ_REWARD_FORM = 40;
+const SEQ_REWARD_FORM = 80;
 const SEQ_REWARD_HIDDEN = 10; //15
 const SEQ_REWARD_TYPEABLE = 10; //20
 const SEQ_REWARD_INSERT = 20;
@@ -2044,7 +2044,7 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        //currenturl = "http://webapp2.csl.toronto.edu:8080/wp-admin/options.php" // overwrite the current url value to test on single page
+        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/edit-tags.php?taxonomy=category" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
