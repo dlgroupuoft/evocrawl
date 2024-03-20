@@ -39,7 +39,7 @@ def process_line(line, identifier = "sim"):
                 successful_injections[identifier].append(num)
 
 def process_file():
-    with open(folder_name + '/log.txt') as f:
+    with open(folder_name + '/log.txt', errors='ignore') as f:
         lines = f.readlines()
         for line in lines:
             #process_line(line, "fuzz")

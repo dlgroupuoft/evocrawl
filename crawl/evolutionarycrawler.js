@@ -2136,6 +2136,7 @@ const runevolutionarycrawler = async function (t) {
                 console.log("error occurs during the evaluation of sequences");
                 console.error(e);
             }
+            console.log("finish evaluating fitness");
             if(Number(INPUTS_DETECTION) == 1) {new_seq_population = analyze_seq_population(new_seq_population, currenturl, i);}
             // save evolution state
             // saveEvolutionState(seq_population, {generation: i});
