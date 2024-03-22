@@ -45,8 +45,8 @@ const KAFKA_CONSUMER_GROUP = APPNAME+'-'+USER_MODE+'-EC' + BLIND;
 const MARGIN_FACTOR = process.env.MF?process.env.MF:0.1;
 const DEBUG_PRINT = process.env.DEBUG_PRINT=="1"?true:false;  // default - disable debug logs
 const ENABLE_KAFKA = process.env.ENABLE_KAFKA=="1"?true:false;  // default - disable kafka connection
-//const heavy_pages = login_info["heavy_pages"];
-const heavy_pages = [];
+const heavy_pages = login_info["heavy_pages"];
+//const heavy_pages = [];
 const logout_keywords = login_info["logout_keywords"];
 let form_app_keywords = form_success[APPNAME];
 let baseURI = extractBaseUrl(login_info[APPNAME]);
@@ -1483,8 +1483,8 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                 total_score += SEQ_PENALTY_SMALL;
                 continue;
             }
-            const optrand = Math.floor(Math.random()*optioncount) //assign random number may suffer from the all deletion problem
-            //const optrand = 0;
+            //const optrand = Math.floor(Math.random()*optioncount) //assign random number may suffer from the all deletion problem
+            const optrand = 0;
             try{
                 await t.click(element);
                 await t.click(options.nth(optrand));
@@ -2044,10 +2044,11 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/edit-tags.php?taxonomy=category" // overwrite the current url value to test on single page
+        currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options-general.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
+        console.log("login status: ", login_status);
         if(login_status == 0){
             await get_cookies(t, currenturl);
             login_status = 1;

@@ -84,8 +84,8 @@ const elementsOfInterest = ['input','button','textarea','select','a'];
 var request_log_count = 0;
 let navigationSet = [];
 let nav_edge = "";
-//const heavy_pages = login_info["heavy_pages"];
-const heavy_pages = [];
+const heavy_pages = login_info["heavy_pages"];
+//const heavy_pages = [];
 const logout_keywords = login_info["logout_keywords"];
 const logger = RequestLogger(request => {
         // console.log(request.headers.accept)
