@@ -29,6 +29,6 @@
                     "atom", "appearance", "admin/modules", "authentication", "acp_board", "acp_captcha", 
                     "delete_cookies", "admin%2Fauthentication", "UserListController",
                     "r=ldap%2Fadmin", "admin%2Fmodule", "%2Faccount", "user%2Fdelete", "user%2Fedit", 
-                    "mode=reg_details", "users", "fct=user", "UserModificationController", "UserCredentialController", "TwoFactorController"],
-    "logout_keywords":["sign out", "signout", "log out", "logout", "password", "two_factor_authentication"]
+                    "mode=reg_details", "user-edit", "fct=user", "UserModificationController", "UserCredentialController", "TwoFactorController"],
+    "logout_keywords":["sign out", "signout", "log out", "logout", "password", "two_factor_authentication", "language"]
 }
