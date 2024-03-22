@@ -2,6 +2,7 @@ import re
 import os
 import sys
 import json
+import time
 
 successful_injections = dict()
 appname = ["wordpress", "drupal", "kanboard", "humhub", "hotcrp", "phpbb", "opencart", "dokuwiki", "impresscms"]
@@ -64,8 +65,22 @@ def write_file(folder, name, data):
 #        print(filename)
 #        command = "mysqlbinlog --base64-output=decode-rows --verbose " + filename + " > data2/log.txt"
 #        os.system(command)
-temp_injections = load_file(folder_name + "/", "insertions.json")
-if temp_injections != False:
-    successful_injections = temp_injections
-process_file()
-write_file(folder_name + '/', "insertions" + ".json", successful_injections)
+flag = dict()
+flag['status'] = 'waiting'
+write_file(folder_name + '/', "flag.json", flag)
+while(1):
+    flag = load_file(folder_name + "/", "flag.json")
+    if not flag['status'] == 'waiting':
+        #print('waiting')
+        time.sleep(1)
+        continue
+    print('start extraction')
+    os.system('sh c_insert.sh')
+    temp_injections = load_file(folder_name + "/", "insertions.json")
+    if temp_injections != False:
+        successful_injections = temp_injections
+    process_file()
+    write_file(folder_name + '/', "insertions" + ".json", successful_injections)
+    flag['status'] = 'done'
+    write_file(folder_name + '/', "flag.json", flag)
+    print('done extraction')

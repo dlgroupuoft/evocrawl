@@ -842,6 +842,19 @@ const waitForReplayer = async function(t){
    }
 }
 
+const waitForInputExtractor = async function(t){
+    let flag = utils.loadLogFile('a_flag.json', USER_MODE, INPUT_FOLDER_DATA);
+    flag['status'] = 'waiting'
+    utils.logObject(flag, 'a_flag.json', INPUT_FOLDER_DATA);
+    for(let i = 0; i < 10; i ++){
+        await t.wait(500);
+        flag = utils.loadLogFile('a_flag.json', USER_MODE, INPUT_FOLDER_DATA);
+        if(flag['status'] == 'done'){
+            break;
+        }
+    }
+}
+
 const payload_detection = function(payloads=[], pageurl=""){
     if(payloads.length != 0){
         if(xss_sinks.hasOwnProperty(pageurl)){
@@ -1982,10 +1995,11 @@ const analyze_ascores = function(average_scores){
     return true;
 }
 
-const analyze_seq_population = function(new_seq_population, currenturl, iter){
-    const execSync = require('child_process').execSync;
+const analyze_seq_population = async function(t, new_seq_population, currenturl, iter){
+    /* const execSync = require('child_process').execSync;
     const myshellscript = execSync('cd ' + INPUT_FOLDER + ' && sh ./c_insert.sh');
-    console.log(myshellscript.toString());
+    console.log(myshellscript.toString()); */
+    await waitForInputExtractor(t);
     let inserted_inputs = utils.loadLogFile('a_insertions.json', USER_MODE, INPUT_FOLDER_DATA);
     let key_inputs = 'e' + APPNAME[0] + APPNAME[1];
     let inserted_inputs_key = inserted_inputs[key_inputs];
@@ -2044,7 +2058,7 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options-general.php" // overwrite the current url value to test on single page
+        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options-general.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");
@@ -2099,6 +2113,7 @@ const runevolutionarycrawler = async function (t) {
             printObject(next_gen, 'next_gen.json'); 
             // printObject(pqueue, 'pqueue.json');   // TODO: only save if pqueue was unchanged
             // await syncprintpqueue();
+            console.log(new_seq_population.length);
             if (new_seq_population.length != 0 && seq_population.length != 0){
                 // 5. selection
                 seq_population = selection(seq_population, new_seq_population, currenturl);
@@ -2138,7 +2153,7 @@ const runevolutionarycrawler = async function (t) {
                 console.error(e);
             }
             console.log("finish evaluating fitness");
-            if(Number(INPUTS_DETECTION) == 1) {new_seq_population = analyze_seq_population(new_seq_population, currenturl, i);}
+            if(Number(INPUTS_DETECTION) == 1) {new_seq_population = await analyze_seq_population(t, new_seq_population, currenturl, i);}
             // save evolution state
             // saveEvolutionState(seq_population, {generation: i});
             //checked_hidden = [];

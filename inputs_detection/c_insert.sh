@@ -7,4 +7,4 @@
 filename=`(ls /var/lib/mysql2/mysql-bin.0* | tail -n 1)`
 echo $filename
 echo 'vmuser' | sudo -S mysqlbinlog --base64-output=decode-rows --verbose $filename > data/log.txt
-python3 'extract_injected_inputs.py' 'data'
+#python3 'extract_injected_inputs.py' 'data'
