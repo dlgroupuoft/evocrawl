@@ -2153,7 +2153,7 @@ const runevolutionarycrawler = async function (t) {
                 console.error(e);
             }
             console.log("finish evaluating fitness");
-            if(Number(INPUTS_DETECTION) == 1) {new_seq_population = await analyze_seq_population(t, new_seq_population, currenturl, i);}
+            if(Number(INPUTS_DETECTION) == 1 && APPNAME != 'dokuwiki') {new_seq_population = await analyze_seq_population(t, new_seq_population, currenturl, i);}
             // save evolution state
             // saveEvolutionState(seq_population, {generation: i});
             //checked_hidden = [];
