@@ -10,3 +10,4 @@ package-lock.json
 cov/*
 buffers/*
 package.json
+screenlog*
