@@ -847,7 +847,7 @@ const waitForInputExtractor = async function(t){
     flag['status'] = 'waiting'
     utils.logObject(flag, 'a_flag.json', INPUT_FOLDER_DATA);
     for(let i = 0; i < 10; i ++){
-        await t.wait(500);
+        await t.wait(1000);
         flag = utils.loadLogFile('a_flag.json', USER_MODE, INPUT_FOLDER_DATA);
         if(flag['status'] == 'done'){
             break;
