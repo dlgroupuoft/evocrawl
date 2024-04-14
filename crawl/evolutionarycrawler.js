@@ -31,6 +31,7 @@ const DATA_FOLDER = process.env.DATA_FOLDER?process.env.DATA_FOLDER:'data/'+APPN
 const INPUT_FOLDER = process.env.INSERT_FOLDER?process.env.INSERT_FOLDER:'inputs_detection/';
 const INPUT_FOLDER_DATA = INPUT_FOLDER + 'data/';
 const INPUTS_DETECTION = process.env.INPUTS_DETECTION?process.env.INPUTS_DETECTION:0;
+const TRACK_DEPENDENCY = process.env.TRACK_DEPENDENCY?process.env.TRACK_DEPENDENCY:1;
 const REPLAY = process.env.REPLAY?process.env.REPLAY:0;
 const MODE = process.env.MODE?process.env.MODE:3;
 const XSS_MODE = process.env.XSS_MODE?process.env.XSS_MODE:0;
@@ -1375,7 +1376,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                     new_elements = results[1];
                 }
                 //console.log("new elements length: ", new_elements.length);
-                if(new_elements.length != 0 && !checked_hidden.includes(index)){
+                if(new_elements.length != 0 && !checked_hidden.includes(index) && TRACK_DEPENDENCY == 1){
                     //for elements revealed by ajax
                     let new_elements_selector;
                     let tmp_info = element_info
@@ -1424,7 +1425,7 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
                 total_score = await capture_request_url(req_count, currenturl, newurl, elementtag, total_score, nav_edge);
             }else {
                 //for hidden elements only revealed by javascript
-                if(!checked_hidden.includes(index) && rrweb.check_dom_changes(page_events))
+                if(!checked_hidden.includes(index) && rrweb.check_dom_changes(page_events) && TRACK_DEPENDENCY == 1)
                 {
                     if(DEBUG_PRINT) console.log("checking hidden elements");
                     try{
