@@ -13,7 +13,7 @@ if [ -z "$1" ]
     BLIND=2
     TOKEN_MODE=0
     INPUTS_DETECTION=0
-    TRACK_DEPENDENCY=1
+    TRACK_DEPENDENCY=0
     MODE=0 #3
     REPLAY=0
     DATA_FOLDER=$PWD/../data/$1/
