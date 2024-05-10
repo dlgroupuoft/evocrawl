@@ -697,7 +697,7 @@ const recursive_intercation = async function(t, currentseed={},  eles=Selector()
                     ele_txt = "";
                 }
                 ele_txt = ele_txt.replace(/[^a-z0-9]/gi,'').toLowerCase();
-                if(ele_txt.includes("signin") || ele_txt.includes("login")){
+                if((ele_txt.includes("signin") || ele_txt.includes("login")) && MODE != 5){
                     console.log("signin button detected");
                     await get_cookies(t, login_info[APPNAME]);
                     return 0;
@@ -991,6 +991,7 @@ const crawl_links = async function(t, currentseed){
     let currentpageurl = currentseed.key;
     console.log("crawl static links");
     await navigate_wrap(t, currentpageurl);
+    printObject(logger.requests, "request_logs.json")
     let tmp_html = await getPageHTML();
     printObject(tmp_html, "tmp_html.json");
     let js_flag = await event_executor(t, currentseed);
@@ -1374,7 +1375,7 @@ const runcrawler = async function(t) {
         printObject(cache, "sim_crawler_cache.json");
         beginning ++;
         /* currentseed = {
-            "url": "http://webapp2.csl.toronto.edu:9200/node/add/article",
+            "key": "http://evocrawl1.csl.toronto.edu:8080/wp-admin/post.php?post=1&action=edit",
             "event":""
         }; */
         currentseed.key = utils.replaceToken(currentseed.key, token_name, token_value);
@@ -1389,19 +1390,19 @@ const runcrawler = async function(t) {
         cache.page = currentseed.key;
         printObject(cache, "sim_crawler_cache.json");
         //console.log("Current queue length = " + queue.length);
-        //MODE=1 --> IDOR, MODE=2 --> TOKEN, MODE=3 --> XSS
+        //MODE=1 --> IDOR, MODE=2 --> TOKEN, MODE=3 --> XSS, MODE=5 --> privacy link extraction
         try{
             await crawl_links(t, currentseed);
         }catch(e){
             console.log(e);
         }
         try{
-            await crawl_events(t, currentseed);
+            if (MODE != 5) await crawl_events(t, currentseed);
         }catch(e){
             console.log(e);
         }
         try{
-            await crawl_forms(t, currentseed, 0);
+            if (MODE != 5) await crawl_forms(t, currentseed, 0);
             if(MODE == 3) await crawl_forms(t, currentseed, 1);
         }catch(e){
             console.log(e);
@@ -1432,7 +1433,7 @@ test
         }
         console.log("token_name: ", token_name);
         let start_url = login_info[APPNAME];
-        await get_cookies(t, login_info[APPNAME]);
+        if(MODE != 5) await get_cookies(t, login_info[APPNAME]);
         await t.setNativeDialogHandler(() => true);  // handle pop up dialog boxes;
         await t.maximizeWindow();  // less complex ui when the window size is largest
         // baseURI = await getURL();       

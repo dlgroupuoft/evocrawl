@@ -8,6 +8,24 @@ const login = async function(t, APPNAME, url, username="admin", password="Vmuser
     const AUTO_MODE = 0;
     if(AUTO_MODE == 0){
         await t.navigateTo(url);
+        if(APPNAME == 'kibana')
+        {
+            console.log("inside login");
+            username = "elastic";
+            password = "elastickibana";
+            console.log(username, password);
+            if (await Selector('input[name=\"username\"]').visible) {
+                console.log("at login");
+            }
+            try{
+                await t.typeText(Selector('input[name=\"username\"]'), username)
+                await t.typeText(Selector('input[name=\"password"\]'), password, { replace: true, paste: true })
+                await t.click(Selector('button[type=\"submit"\]'));
+            }catch(e){
+                console.log(e);
+            }
+            console.log("finished login");
+        }
         if(APPNAME == 'hotcrp') 
         {
             if(username == 'admin'){

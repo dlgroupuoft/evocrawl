@@ -1,5 +1,6 @@
 {
-    "wordpress":"http://evocrawl12.csl.toronto.edu:8080/wp-login.php",
+    "wordpress":"http://evocrawl1.csl.toronto.edu:8080/wp-login.php",
+    "wordpress_org": "https://wordpress.org/",
     "wordpress2":"http://wordpressnf5.csl.toronto.edu/wp-login.php",
     "drupal":"http://evocrawl2.csl.toronto.edu:9200/user/login",
     "humhub":"http://evocrawl6.csl.toronto.edu:8300/index.php?r=user%2Fauth%2Flogin",
@@ -11,6 +12,7 @@
     "dokuwiki":"http://evocrawl5.csl.toronto.edu:8400/doku.php?id=wiki:welcome&do=login",
     "kanboard":"http://evocrawl3.csl.toronto.edu:8200/",
     "phpbb": "http://evocrawl8.csl.toronto.edu:8700/index.php",
+    "kibana": "http://kibanatest.csl.toronto.edu:5601/login",
     "wackopicko": "http://10.99.0.187:8080/users/login.php",
     "webapp_name": "start_url with login form",
     "crawler":"admin",
