@@ -1,6 +1,7 @@
 {
     "wordpress":"http://evocrawl1.csl.toronto.edu:8080/wp-login.php",
     "wordpress_org": "https://wordpress.org/",
+    "google": "https://policies.google.com/privacy?hl=en-US",
     "wordpress2":"http://wordpressnf5.csl.toronto.edu/wp-login.php",
     "drupal":"http://evocrawl2.csl.toronto.edu:9200/user/login",
     "humhub":"http://evocrawl6.csl.toronto.edu:8300/index.php?r=user%2Fauth%2Flogin",
