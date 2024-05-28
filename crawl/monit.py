@@ -6,7 +6,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description='Crawler')
 parser.add_argument("--APP", help="Web APP to crawl")
-parser.add_argument("--MODE", help="XSS or IDOR")
+parser.add_argument("--MODE", help="XSS or IDOR or privacy")
 
 args = parser.parse_args()
 
