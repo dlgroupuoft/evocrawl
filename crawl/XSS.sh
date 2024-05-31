@@ -8,13 +8,13 @@ if [ -z "$1" ]
   else
     echo Testing $1
     DBG_PRNT=1
-    KAFKA=0
+    KAFKA=1
     MARGIN=0.1
     BLIND=2
     TOKEN_MODE=0
-    INPUTS_DETECTION=0
+    INPUTS_DETECTION=1
     TRACK_DEPENDENCY=1
-    MODE=3 #3
+    MODE=0 #3
     REPLAY=0
     DATA_FOLDER=$PWD/../data/$1/
     DATA_FOLDER_EV2=$PWD/../data/$1/ev_instance_2/
