@@ -25,6 +25,7 @@ const rrweb = require("../utils-evo/rrweb_events");
 const pathoptimizer = require("../replay/pathoptimizer");
 const token_info = require('../utils-evo/token_names.json');
 const form_success = require("../utils-evo/form_success.json");
+const global_form_queue = require("../utils-evo/form_queue.json");
 const APPNAME = process.env.APPNAME?process.env.APPNAME:'gitlab'; // default gitlab
 const USER_MODE = process.env.USER_MODE?process.env.USER_MODE.toLowerCase():'a'; // default 'userA'
 const DATA_FOLDER = process.env.DATA_FOLDER?process.env.DATA_FOLDER:'data/'+APPNAME+'/';
@@ -97,7 +98,6 @@ const interactions = ['click', 'typetext', 'uploadfile', 'select', 'iframe'];
 
 var request_log_count = 0;
 
-let averageFs = [];
 let cache = {page: "", seq: 0, action: "", stat: "", href: "", navSet: 0, log: 0};
 let replay_cache = {seq: 0, stat: "", visibility: false};
 let token_name = "";
@@ -107,18 +107,17 @@ let test_tokens = [];
 let url_400 = [];
 let req_urlmap = [];
 let common_elements = {admin: [], userA: [], userB: []}
-let temp_identifier = 0;
 let random_names = {};
 let xss_sources = {};
 let xss_sinks = {};
 let checked_hidden = [];
-let success_forms = {html: [], url: []};
 let page_value = 0;
 let typed_texts = [];
 let ev_forms = {};
 let average_scores = [];
 let form_texts = {};
 let login_status = 0;
+let form_queue = [];
 
 const logger = RequestLogger(request => {
     // console.log(request.headers.accept)
@@ -347,6 +346,8 @@ const loadCache = function () {
     } else {
         pqueue.setheap(temp_pq._heap);
     }
+    form_queue = loadfile('form_queue.json');
+    form_queue = form_queue?form_queue:global_form_queue[APPNAME];
     next_gen = loadfile('next_gen.json');
     next_gen = next_gen?next_gen:0;
     ev_urltable = loadfile('ev_urltable.json');
@@ -2051,14 +2052,16 @@ const runevolutionarycrawler = async function (t) {
         if(MODE == 1){
             url_map = []
         }
-        if(pqueue.size() == 0){
+        if(pqueue.size() == 0 || form_queue.length == 0){
             //wait for new pages, while there is no seeds in the queue
             await t.wait(5000);
             continue;
         }
         //pqueue.sort();
-        printObject(pqueue, 'pqueue.json');
+        //printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
+        currenturl = form_queue.shift();
+        printObject(form_queue, 'form_queue.json');
         //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options-general.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
