@@ -1364,7 +1364,7 @@ const runcrawler = async function(t) {
     let beginning = 0;
     while (1) {      // Start BFS
         // in case session out
-        if(queue.size() == 0){
+        if(queue.size() == 0 || form_queue.length == 0){
             await t.wait(5000);
             continue;
         }
