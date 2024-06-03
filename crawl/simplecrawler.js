@@ -1364,7 +1364,7 @@ const runcrawler = async function(t) {
     let beginning = 0;
     while (1) {      // Start BFS
         // in case session out
-        if(queue.size() == 0 || form_queue.length == 0){
+        if(queue.size() == 0){
             await t.wait(5000);
             continue;
         }
@@ -1378,9 +1378,9 @@ const runcrawler = async function(t) {
         cache.log++;
         printObject(cache, "sim_crawler_cache.json");
         beginning ++;
-        currentseed.key = form_queue.shift();
-        currentseed.event = ""
-        printObject(form_queue, "form_queue.json");
+        //currentseed.key = form_queue.shift();
+        //currentseed.event = ""
+        //printObject(form_queue, "form_queue.json");
         /* currentseed = {
             "key": "http://evocrawl1.csl.toronto.edu:8080/wp-admin/post.php?post=1&action=edit",
             "event":""

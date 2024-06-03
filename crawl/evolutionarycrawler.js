@@ -846,6 +846,9 @@ const waitForReplayer = async function(t){
 
 const waitForInputExtractor = async function(t){
     let flag = utils.loadLogFile('a_flag.json', USER_MODE, INPUT_FOLDER_DATA);
+    if(flag == false){
+        return;
+    }
     flag['status'] = 'waiting'
     utils.logObject(flag, 'a_flag.json', INPUT_FOLDER_DATA);
     for(let i = 0; i < 10; i ++){
@@ -2003,6 +2006,9 @@ const analyze_seq_population = async function(t, new_seq_population, currenturl,
     console.log(myshellscript.toString()); */
     await waitForInputExtractor(t);
     let inserted_inputs = utils.loadLogFile('a_insertions.json', USER_MODE, INPUT_FOLDER_DATA);
+    if (inserted_inputs == false){
+        return new_seq_population;
+    }
     let key_inputs = 'e' + APPNAME[0] + APPNAME[1];
     let inserted_inputs_key = inserted_inputs[key_inputs];
     console.log(inserted_inputs_key);
@@ -2052,7 +2058,7 @@ const runevolutionarycrawler = async function (t) {
         if(MODE == 1){
             url_map = []
         }
-        if(pqueue.size() == 0 || form_queue.length == 0){
+        if(pqueue.size() == 0){
             //wait for new pages, while there is no seeds in the queue
             await t.wait(5000);
             continue;
@@ -2060,9 +2066,9 @@ const runevolutionarycrawler = async function (t) {
         //pqueue.sort();
         //printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        currenturl = form_queue.shift();
-        printObject(form_queue, 'form_queue.json');
-        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/options-general.php" // overwrite the current url value to test on single page
+        //currenturl = form_queue.shift();
+        //printObject(form_queue, 'form_queue.json');
+        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/theme-editor.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");

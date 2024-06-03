@@ -394,6 +394,7 @@ const loadLogFile = function (name, user='a', DATA_FOLDER) {
         } catch (err) {
             //console.log(`error loading file - ${DATA_FOLDER+user+'_'+name}`)
             //console.log(err);
+            return false;
         }
         //console.error(`file ${DATA_FOLDER+user+'_'+name} not found`);
         return false
