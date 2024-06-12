@@ -14,7 +14,7 @@ if [ -z "$1" ]
     TOKEN_MODE=0
     INPUTS_DETECTION=1
     TRACK_DEPENDENCY=1
-    MODE=0 #3
+    MODE=3 #3
     REPLAY=0
     DATA_FOLDER=$PWD/../data/$1/
     DATA_FOLDER_EV2=$PWD/../data/$1/ev_instance_2/
