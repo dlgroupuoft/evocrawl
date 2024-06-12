@@ -46,6 +46,7 @@ const token_info = require('../utils-evo/token_names.json');
 const path_info = require('../utils-evo/path.json');
 const pathoptimizer = require("../replay/pathoptimizer");
 const form_success = require("../utils-evo/form_success.json");
+const global_form_queue = require("../utils-evo/form_queue.json");
 let baseURI = extractBaseUrl(login_info[APPNAME]);
 let folder = login_info['folder'];
 baseURI = baseURI + folder;
@@ -74,6 +75,7 @@ let sim_forms = {};
 let global_element_info = {};
 let typed_texts = [];
 let form_texts = {};
+let form_queue = [];
 //const USERA = applogin[APPNAME].userA
 //const USERB = applogin[APPNAME].userB
 //const USERC = applogin[APPNAME].userC
@@ -334,6 +336,8 @@ const loadCache = function () {
     } else {
         queue.setheap(temp_pq._heap);
     }
+    form_queue = loadfile('form_queue.json');
+    form_queue = form_queue?form_queue:global_form_queue[APPNAME];
     next_eid = loadfile('next_eid.json');
     // successflag = next_eid?true:false;   // dont restart crawler if next_eid fails to load
     next_eid = next_eid?next_eid:0;
@@ -1374,6 +1378,9 @@ const runcrawler = async function(t) {
         cache.log++;
         printObject(cache, "sim_crawler_cache.json");
         beginning ++;
+        //currentseed.key = form_queue.shift();
+        //currentseed.event = ""
+        //printObject(form_queue, "form_queue.json");
         /* currentseed = {
             "key": "http://evocrawl1.csl.toronto.edu:8080/wp-admin/post.php?post=1&action=edit",
             "event":""
