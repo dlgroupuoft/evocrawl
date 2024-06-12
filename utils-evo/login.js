@@ -44,10 +44,14 @@ const login = async function(t, APPNAME, url, username="admin", password="Vmuser
         }
         if(APPNAME.includes('wordpress'))
         {
-            await t
+/*             await t
             .typeText(Selector('input#user_login.input'), username, { replace: true, paste: true })
             .typeText(Selector('input#user_pass.input.password-input'), password, { replace: true, paste: true })
-            .click(Selector('input#wp-submit'));
+            .click(Selector('input#wp-submit')); */
+            await t
+            .typeText(Selector('#user_login'), username, { replace: true, paste: true })
+            .typeText(Selector('#user_pass'), password, { replace: true, paste: true })
+            .click(Selector('#wp-submit'));
         }
         if(APPNAME == 'humhub')
         {
@@ -93,7 +97,8 @@ const login = async function(t, APPNAME, url, username="admin", password="Vmuser
             await t
             .typeText(Selector('#input-username'), username, { replace: true, paste: true })
             .typeText(Selector('#input-password'), password, { replace: true, paste: true })
-            .click(Selector('#form-login > div.text-end > button'));
+            .click(Selector('#content > div > div > div > div > div.panel-body > form > div.text-right > button'));
+            //.click(Selector('#form-login > div.text-end > button'));
         }
         if(APPNAME == 'dokuwiki'){
             await t
