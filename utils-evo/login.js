@@ -10,13 +10,8 @@ const login = async function(t, APPNAME, url, username="admin", password="Vmuser
         await t.navigateTo(url);
         if(APPNAME == 'kibana')
         {
-            console.log("inside login");
             username = "elastic";
-            password = "elastickibana";
             console.log(username, password);
-            if (await Selector('input[name=\"username\"]').visible) {
-                console.log("at login");
-            }
             try{
                 await t.typeText(Selector('input[name=\"username\"]'), username)
                 await t.typeText(Selector('input[name=\"password"\]'), password, { replace: true, paste: true })
@@ -24,7 +19,6 @@ const login = async function(t, APPNAME, url, username="admin", password="Vmuser
             }catch(e){
                 console.log(e);
             }
-            console.log("finished login");
         }
         if(APPNAME == 'hotcrp') 
         {
