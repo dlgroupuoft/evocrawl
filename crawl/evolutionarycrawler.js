@@ -24,7 +24,6 @@ const utils = require("../utils-evo/utils");
 const rrweb = require("../utils-evo/rrweb_events");
 const pathoptimizer = require("../replay/pathoptimizer");
 const token_info = require('../utils-evo/token_names.json');
-const form_success = require("../utils-evo/form_success.json");
 const global_form_queue = require("../utils-evo/form_queue.json");
 const APPNAME = process.env.APPNAME?process.env.APPNAME:'gitlab'; // default gitlab
 const USER_MODE = process.env.USER_MODE?process.env.USER_MODE.toLowerCase():'a'; // default 'userA'
@@ -35,7 +34,6 @@ const INPUTS_DETECTION = process.env.INPUTS_DETECTION?process.env.INPUTS_DETECTI
 const TRACK_DEPENDENCY = process.env.TRACK_DEPENDENCY?process.env.TRACK_DEPENDENCY:1;
 const REPLAY = process.env.REPLAY?process.env.REPLAY:0;
 const MODE = process.env.MODE?process.env.MODE:3;
-const XSS_MODE = process.env.XSS_MODE?process.env.XSS_MODE:0;
 const BLIND = process.env.BLIND?process.env.BLIND:0;
 const LOG_FOLDER = DATA_FOLDER + 'ev_log/';
 const SET_FOLDER = DATA_FOLDER + 'ev_set/';
@@ -50,7 +48,6 @@ const ENABLE_KAFKA = process.env.ENABLE_KAFKA=="1"?true:false;  // default - dis
 const heavy_pages = login_info["heavy_pages"];
 //const heavy_pages = [];
 const logout_keywords = login_info["logout_keywords"];
-let form_app_keywords = form_success[APPNAME];
 let baseURI = extractBaseUrl(login_info[APPNAME]);
 baseURI += login_info['folder'];
 let baseRE = new RegExp(baseURI.slice(0, -1));
@@ -71,9 +68,9 @@ const GENE_PENALTY_NONE = 1;
 
 const SEQ_INIT_SCORE = 100;
 const SEQ_REWARD_NEWREQ = 10;
-const SEQ_REWARD_FORM = 80; //80
-const SEQ_REWARD_HIDDEN = 10; //15
-const SEQ_REWARD_TYPEABLE = 10; //10
+const SEQ_REWARD_FORM = 80;
+const SEQ_REWARD_HIDDEN = 10; 
+const SEQ_REWARD_TYPEABLE = 10; 
 const SEQ_REWARD_INSERT = 20;
 const SEQ_REWARD_UPLOADFILE = 20;
 const SEQ_REWARD_SELECT = 10;
@@ -201,20 +198,10 @@ const catchPayload = ClientFunction(catch_payload);
 
 var ev_urltable = {};          // stores urls of all requests logged including ajax requests
 // var urlscoretable = {};     // stores urls of only web pages and not ajax/xhr
-var total_ev_urltable = {};
-
-let dynamicElements = {};
-let dynamicValues = [];
 let error_log = {};
 let navigationSet = [];
 var pqueue = new PriorityQueue();    // an instance of the PriorityQueue Class in pqueue.js file; stores urls in a priority queue
 var visitedpagestable = {}; // stores urls in the exploitqueue as an object for fast O(1) fetch; stores history of urls
-var requestSet = [];
-var monit_cache = {};
-var seq_req_post = {};
-var seq_req_other = {};
-var seq_req_500 = {};
-var total_visitedpagestable = {};
 var dependantelements = {}; // key is {e_id, a_id} gene and value is a list of e_ids that become visible after executing that gene
 var genescoremap = {};      // stores score of a gene. This score represents the gene's desirability+novelty. 
                             // Used during sanitization/mutation. A gene is a {element_id, action_id} object. 
@@ -280,30 +267,6 @@ const sendtotopic = async function(producer, pageurl, topic, score) {
         ],
     })
     await producer.disconnect()
-}
-
-const syncprintpqueue = async function() {
-    
-    var opts = {wait: 10000} // some big number
-    lockFile.lock('pqueue.lock', opts, function (er) {
-        // if the er happens, then it failed to acquire a lock.
-        // if there was not an error, then the file was created,
-        // and won't be deleted until we unlock it.
-        console.log("acquiring pqueue.lock")
-        if(er) {
-            console.log(er)
-        }
-        printObject(pqueue, 'pqueue.json')
-        lockFile.unlock('pqueue.lock', function (er) {
-            // er means that an error happened, and is probably bad.
-            if(er) {
-                console.log("Error while releasing pqueue.lock")
-                console.log(er)
-            }
-        })
-        console.log("releasing pqueue.lock")
-    })
-    console.log("pqueue.json file saved")
 }
 
 const runconsumer = async () => {
@@ -378,13 +341,6 @@ const loadCache = function () {
     ev_forms = ev_forms?ev_forms:{};
     form_texts = loadfile('ev_form_texts.json');
     form_texts = form_texts?form_texts:{};
-    form_app_keywords = form_app_keywords?form_app_keywords:[];
-    for(let i = 0; i < form_app_keywords.length; i++){
-        let sentence = form_app_keywords[i];
-        sentence = sentence.toLowerCase();
-        sentence = sentence.replace(/[^a-z0-9]/gi, '');
-        form_app_keywords[i] = sentence;
-    }
     if(ENABLE_KAFKA){
             runconsumer() // run consumer handler after loading data otherwise old data may be lost when the program restarts
         console.log("consuming finished");
@@ -417,17 +373,6 @@ const loadAndSave = function (key, value, filename) {
     f = f?f:{}
     f[key] = value
     printObject(f, filename)
-}
-
-const sanitizeUrlInputs = function (url) {
-    // returns url with input values replaced with FUZZ
-    var urlobj = new URL(url)
-    var sanitized = url
-    for(var value of urlobj.searchParams.values()) {
-        console.log(value);
-        sanitized = sanitized.replace(value, "FUZZ")
-    }
-    return sanitized
 }
 
 const check_similarity = async function (url, respA, respB, respC, method = 'get'){
@@ -502,60 +447,6 @@ const executeRequest = (userArequest, url, reqMethod, reqBody, otherUserCookie) 
     });
 };
 
-const run_triad_on_page = async function(t, url, userAhtml) {
-    console.log("Testing page - "+url)
-    await t.useRole(USERB)
-    await t.navigateTo(url)
-    var userBhtml = await getPageHTML();
-    await t.useRole(USERC)
-    await t.navigateTo(url)
-    var userChtml = await getPageHTML();
-    
-    await check_similarity(url, userAhtml, userBhtml, userChtml, 'get');
-}
-
-const run_triad_on_req = async function(t, userAlog) {
-    var userAreq = userAlog.request
-    console.log("Testing request url - "+userAreq.url)
-    var respA = ''
-    var respAbody = userAlog.response.body
-    if(APPNAME !== "humhub") {
-        const zlib = require('zlib');
-        try {
-            respA = zlib.unzipSync(new Buffer.from(respAbody)).toString()  // unzip before converting to string
-        }
-        catch(err) {
-            console.log(err)
-            try {  // if the data was not compressed
-                var resp = new Buffer.from(respAbody)
-                respA = resp.toString()
-            }catch(e) {
-                console.log(e)
-                return
-            }
-        }
-    }else {
-        respA = respAbody
-    }
-    // console.log(respA)
-    // console.log(checkRequestLogs())
-    await t.useRole(USERB)
-    // console.log(checkRequestLogs())
-    var userBcookie = logger.requests[logger.requests.length -1].request.headers.cookie
-    var respB = await executeRequest(userAreq, userBcookie)
-    await t.useRole(USERC)
-    // console.log(checkRequestLogs())
-    var userCcookie = logger.requests[logger.requests.length -1].request.headers.cookie
-    var respC = await executeRequest(userAreq, userCcookie)
-    if (respB.status != 'success' || respC.status != 'success') {
-        if(DEBUG_PRINT){console.log("RespB error = "+respB.error+"\nRespC error = "+respC.error)}
-        return;
-    }
-    respB = respB.response; respC = respC.response; 
-    
-    await check_similarity(userAreq.url, respA, respB, respC, userAreq.method);
-}
-
 const checkHiddenElements = async function (allelements, h_elements, t, parent_ele = Selector("")) { //for hidden elements other than ajax
     var v_count = 0;
     var v_elements = [];
@@ -579,15 +470,6 @@ const checkHiddenElements = async function (allelements, h_elements, t, parent_e
     var new_visible = {count: v_count, element_ids: v_elements};
     // console.log("NNew v = "+ JSON.stringify(new_visible))
     return new_visible;
-}
-
-const convertseqtoname = function (sequence) {
-    var seq_readable = []
-    for(let i=0; i<sequence.length; i++) {
-        var e_id = sequence[i].element_id; var a_id = sequence[i].action_id;
-        seq_readable.push({e_id: e_id, action: interactions[a_id], a_id: a_id})
-    }
-    return seq_readable;
 }
 
 const getActionProbabilistically = function() {
@@ -637,31 +519,6 @@ const initialize_EA = async function (visibleelementids, p_size, s_size, allelem
                 if(genescoremap[Number(id)] == undefined || genescoremap[Number(id)] >= 1){
                     break;
                 }
-/*                 let element = allelements[id].element; 
-                try{
-                    var attr = await element.attributes;
-                }
-                catch(e){
-                    console.log(e);
-                    continue;
-                }
-                if(attr.hasOwnProperty('href')){
-                    let href = attr.href;
-                    if(href.includes('http') && !href.includes(baseURI)){
-                        flag = true;
-                        continue;
-                    }
-                    href = utils.replaceToken(href, token_name, "token");
-                    href = href.replace(baseURI, "/");
-                    //avoid the element that already tested and logged
-                    for(let iter = 0; iter < url_map.length; iter ++){
-                        let str1 = url_map[iter];
-                        flag = utils.string_backward_match(str1, href);
-                        if(flag){
-                            break;
-                        }   
-                    }
-                } */
             }while((id in seq.map(g=>{return g.element_id})) || flag);
             action_id = getActionProbabilistically();
             gene = {element_id: id, action_id: action_id, css_selector: '', typed_texts: ''};
@@ -808,28 +665,6 @@ const check_new_elements = async function(t, new_elements = [], element_info = {
     return new_element_selectors;
 }
 
-const filteredCssString = function(elementattr, dynamic_values){
-    let css_string = '';
-    for(const property in elementattr){
-        let value = String(elementattr[property]);
-        if(value.includes('[')){
-            continue;
-        }
-        let flag = 0;
-        for(let i = 0; i < dynamic_values.length; i++){
-            let dynamic = String(dynamic_values[i]);
-            if(value == dynamic){
-                flag = 1;
-                break;
-            }
-        }
-        if(flag == 0){
-            css_string += '[' + String(property) + '=' + '\"' + String(elementattr[property]) + '\"' + ']';
-        }
-    }
-    return css_string;
-}
-
 const waitForReplayer = async function(t){
    cache.stat = "waiting";
    if(DEBUG_PRINT) console.log("waiting for the replayer to check visibility");
@@ -884,17 +719,6 @@ const navSet_incrementor = function (){
 }
 
 const form_submission_check = async function(page_html, form_url, form_method, log_pageurl){
-    let sanitized_page = [];
-    let end_list = [];
-    let form_flag = 0;
-    /* try{
-        end_list = utils.extractTextFromHTML(page_html, 1);
-    }catch{
-        console.log("falied to extract text from html");
-    } */
-    let end_flag = 0;
-    //console.log(typed_texts);
-    //printObject(end_list, "end_list.json");
     if(form_texts[form_url] == undefined){
         form_texts[form_url] = typed_texts;
     }
@@ -904,39 +728,6 @@ const form_submission_check = async function(page_html, form_url, form_method, l
         }
     }
     printObject(form_texts, "ev_form_texts.json");
-    /* for(let i = 0; i < typed_texts.length; i ++){
-        let text = typed_texts[i];
-        text = text.split('\\t').join('').split('\\n').join('').split('\\r').join('');
-        text = text.replace(/[^a-z0-9]/gi, '');
-        for(let j = 0; j < end_list.length; j++){
-            let end_node = end_list[j];
-            if(end_node.includes(text)){
-                end_flag = 1;
-                break;
-            }
-        }
-    }
-    if(end_flag == 0){
-        try{
-            sanitized_page = utils.extractTextFromHTML(page_html);
-        }catch (e){
-            if(DEBUG_PRINT) console.log(e);
-        }
-        //printObject(sanitized_page, "sanitized_page.json");
-        form_flag = utils.check_form_error(sanitized_page, form_app_keywords);
-    }
-    if(end_flag == 1 || form_flag == 1){
-        if(form_method == "post"){
-            if(!ev_forms.hasOwnProperty(log_pageurl)){
-                ev_forms[log_pageurl] = {};
-            }
-            let tmp_obj = ev_forms[log_pageurl];
-            tmp_obj[form_url] = 1;
-            ev_forms[log_pageurl] = tmp_obj;
-            printObject(ev_forms, "ev_forms.json");
-        }
-        appendObjecttoFile(typed_texts, "ev_typed_texts.txt");
-    } */
 }
 
 const capture_request_url = async function(req_count, currenturl, newurl, elementtag, total_score, nav_edge){
@@ -1008,6 +799,7 @@ const capture_request_url = async function(req_count, currenturl, newurl, elemen
     return total_score;
 }
 
+//this function was deprecated
 const random_clickon_submit_buttons = async function(t, typed_texts, total_score, element_info, currenturl){
     let visible_button = [];
     let buttons_submit = Selector("*[type=\"submit\"]");
@@ -1205,15 +997,6 @@ const getSeqScore = async function (t, seq, allelements, h_elements, currenturl)
         }
         let element = allelements[index].element;
         let new_elements = [];
-        /*if(temp_identifier == 0){
-            //element = Selector('a').withText("About"); //only for tracing error, remember to comment out this line
-            element = Selector("#space-menu").nth(0);
-            //temp_identifier = 1;
-        }
-        else{
-            element = Selector("a[href=\"/index.php?r=admin%2Fuser%2Fdisable&id=2\"]");
-            temp_identifier = 0;
-        }*/
         if (!(await element.visible)) {
             // Penalty for this case
             total_score += SEQ_PENALTY_SMALL;
@@ -2063,12 +1846,7 @@ const runevolutionarycrawler = async function (t) {
             await t.wait(5000);
             continue;
         }
-        //pqueue.sort();
-        //printObject(pqueue, 'pqueue.json');
         currenturl = pqueue.peek().key;
-        //currenturl = form_queue.shift();
-        //printObject(form_queue, 'form_queue.json');
-        //currenturl = "http://evocrawl1.csl.toronto.edu:8080/wp-admin/theme-editor.php" // overwrite the current url value to test on single page
         page_value = 0;
         cache.page = currenturl;
         printObject(cache, "ev_crawler_cache.json");

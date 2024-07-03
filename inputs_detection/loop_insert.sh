@@ -6,5 +6,5 @@
  for filename in $binlog_path; do
      echo $filename
      echo 'vmuser' | sudo -S mysqlbinlog --base64-output=decode-rows --verbose $filename > data/log.txt
-     python3 'collect_type.py' 'data' $1
+     python3 'collect_type.py' 'data' $1 #app name
  done

@@ -78,8 +78,9 @@ Now run AuthZee in another terminal
 
 
 ## How to run ##
+*Enable Input Insertions Detection*. EvoCrawl supports using the number of insertions into the database as a feedback for the evolutionary crawler. To enable this feature, the mysql or other sql-like databases needs to be configured to output binary logs to a folder. The current ```inputs_detection/loop_insert.sh``` only supports mysql binary logs. If the application requires other databases, the script can also be modified. Additionally, please set the ```INPUTS_DETECTION=1``` inside the ```crawl/XSS.sh```, if you want to enable Input Insertions Detection. This is an optional feature, set ```INPUTS_DETECTION=0```, if you do not need it.
 
-Add a user role object - ```User A,B,C login credentials and login element identifiers (css)``` in the file `login.js and login_information.json`
+Add a user role object - ```Web applications login URL, User login credentials and login element identifiers (css)``` in the file `login.js and login_information.json`
 (We currently don't support automatic login, but will add the module in the future)
 Then run the monit.py under the `crawl/` folder with the following command
 

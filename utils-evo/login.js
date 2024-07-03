@@ -3,7 +3,7 @@ import { Selector, RequestLogger, ClientFunction, Role } from 'testcafe';
 import element_AZ from '../utils-evo/element'
 const utileva = require('../utils-evo/utils');
 
-const login = async function(t, APPNAME, url, username="admin", password="Vmuser8080@utoronto"){
+const login = async function(t, APPNAME, url, username="admin", password=""){
     const USER_MODE = 'a';
     const AUTO_MODE = 0;
     if(AUTO_MODE == 0){
@@ -70,18 +70,8 @@ const login = async function(t, APPNAME, url, username="admin", password="Vmuser
             .typeText(Selector('input[type=\"password\"]').nth(0), password,  { replace: true, paste: true })
             .click(Selector('input[value=\"User Login\"]').nth(0));
         }
-        if(APPNAME == 'matomo')
-        {
-            await t
-            .typeText(Selector('input#login_form_login'), username, { replace: true, paste: true })
-            .typeText(Selector('input#login_form_password'), password, { replace: true, paste: true })
-            .click(Selector('input#login_form_submit'));
-        }
         if(APPNAME == 'gitlab')
         {
-            if(username == 'admin'){
-                username = "root";
-            }
             await t
             .typeText(Selector('input#user_login'), username, { replace: true, paste: true })
             .typeText(Selector('input#user_password'), password, { replace: true, paste: true })

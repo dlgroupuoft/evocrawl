@@ -1378,13 +1378,6 @@ const runcrawler = async function(t) {
         cache.log++;
         printObject(cache, "sim_crawler_cache.json");
         beginning ++;
-        //currentseed.key = form_queue.shift();
-        //currentseed.event = ""
-        //printObject(form_queue, "form_queue.json");
-        /* currentseed = {
-            "key": "http://evocrawl1.csl.toronto.edu:8080/wp-admin/post.php?post=1&action=edit",
-            "event":""
-        }; */
         currentseed.key = utils.replaceToken(currentseed.key, token_name, token_value);
         console.log("current seed: ", JSON.stringify(currentseed));
         if(url_event[currentseed.key] != undefined){
