@@ -26,13 +26,11 @@ if [ -z "$1" ]
     mkdir -p ${DATA_FOLDER}b_nav_cus
     APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='a' DEBUG_PRINT=$DBG_PRNT ENABLE_KAFKA=$KAFKA MF=$MARGIN REPLAY=$REPLAY MODE=$MODE pm2 start simCrawler.sh --name aSC_$1 #--no-autorestart
     sleep 2m
+    #start the replayer for simCrawler
     APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='b' DEBUG_PRINT=$DBG_PRNT CRAWLER_MODE='sim'  MF=$MARGIN TOKEN_MODE=$TOKEN_MODE pm2 start nav.sh --name bSC_$1 #--no-autorestart
     sleep 1m
     APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='a' DEBUG_PRINT=$DBG_PRNT ENABLE_KAFKA=$KAFKA MF=$MARGIN BLIND=$BLIND REPLAY=$REPLAY MODE=$MODE pm2 start evoCrawler.sh --name aEC2_$1 #--no-autorestart
     sleep 2m
-    APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='b' DEBUG_PRINT=$DBG_PRNT CRAWLER_MODE='ev'  MF=$MARGIN TOKEN_MODE=$TOKEN_MODE pm2 start nav.sh --name bEC_$1 #--no-autorestart
-    #sleep 30m
-    #APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='b' DEBUG_PRINT=$DBG_PRNT CRAWLER_MODE='sim'  MF=$MARGIN pm2 start cus_nav.sh --name bSC_cus_$1
-    #sleep 3m
-    #APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='b' DEBUG_PRINT=$DBG_PRNT CRAWLER_MODE='ev'  MF=$MARGIN pm2 start cus_nav.sh --name bEC_cus_$1
+    #start the replayer for evolutionary crawler
+    APPNAME=$1 DATA_FOLDER=$DATA_FOLDER USER_MODE='b' DEBUG_PRINT=$DBG_PRNT CRAWLER_MODE='ev'  MF=$MARGIN TOKEN_MODE=$TOKEN_MODE pm2 start nav.sh --name bEC_$1 
 fi

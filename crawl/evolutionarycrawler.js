@@ -24,7 +24,6 @@ const utils = require("../utils-evo/utils");
 const rrweb = require("../utils-evo/rrweb_events");
 const pathoptimizer = require("../replay/pathoptimizer");
 const token_info = require('../utils-evo/token_names.json');
-const global_form_queue = require("../utils-evo/form_queue.json");
 const APPNAME = process.env.APPNAME?process.env.APPNAME:'gitlab'; // default gitlab
 const USER_MODE = process.env.USER_MODE?process.env.USER_MODE.toLowerCase():'a'; // default 'userA'
 const DATA_FOLDER = process.env.DATA_FOLDER?process.env.DATA_FOLDER:'data/'+APPNAME+'/';
@@ -114,7 +113,6 @@ let ev_forms = {};
 let average_scores = [];
 let form_texts = {};
 let login_status = 0;
-let form_queue = [];
 
 const logger = RequestLogger(request => {
     // console.log(request.headers.accept)
@@ -309,8 +307,6 @@ const loadCache = function () {
     } else {
         pqueue.setheap(temp_pq._heap);
     }
-    form_queue = loadfile('form_queue.json');
-    form_queue = form_queue?form_queue:global_form_queue[APPNAME];
     next_gen = loadfile('next_gen.json');
     next_gen = next_gen?next_gen:0;
     ev_urltable = loadfile('ev_urltable.json');
@@ -668,7 +664,7 @@ const check_new_elements = async function(t, new_elements = [], element_info = {
 const waitForReplayer = async function(t){
    cache.stat = "waiting";
    if(DEBUG_PRINT) console.log("waiting for the replayer to check visibility");
-   if(DEBUG_PRINT) console.log(cache.seq);
+   if(DEBUG_PRINT) console.log("current gene number: ", cache.seq);
    while(true){
         replay_cache = loadfile('ev_replay_cache.json', 'b');
         replay_cache = replay_cache?replay_cache:{seq: 0, stat: ""};
@@ -1901,7 +1897,7 @@ const runevolutionarycrawler = async function (t) {
             printObject(next_gen, 'next_gen.json'); 
             // printObject(pqueue, 'pqueue.json');   // TODO: only save if pqueue was unchanged
             // await syncprintpqueue();
-            console.log(new_seq_population.length);
+            //console.log(new_seq_population.length);
             if (new_seq_population.length != 0 && seq_population.length != 0){
                 // 5. selection
                 seq_population = selection(seq_population, new_seq_population, currenturl);
