@@ -9,7 +9,7 @@ docker run --name [your_container_name ] -p 8080:80 -d --network bridge [your_im
 docker exec -it [your_container_name] bash
 
 ```
-Then, install the target web application inside the container, please upload the web application to the container: /var/www/html folder for the convenience of coverage collection. (This can be referred to the installation guideline of the web application website)
+Then, install the target web application inside the container, please upload the web application to the container: /var/www/html folder for the convenience of coverage collection. (The installation steps can be referred to the installation guideline of each web application's website)
 
 
 Collecting Coverage - The coverage files are logged per request. To aggregate all the coverage files, run the following command inside the container:
