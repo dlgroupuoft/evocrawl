@@ -38,14 +38,15 @@ const login = async function(t, APPNAME, url, username="admin", password=""){
         }
         if(APPNAME.includes('wordpress'))
         {
-/*             await t
+            await t
             .typeText(Selector('input#user_login.input'), username, { replace: true, paste: true })
             .typeText(Selector('input#user_pass.input.password-input'), password, { replace: true, paste: true })
-            .click(Selector('input#wp-submit')); */
-            await t
+            .click(Selector('input#wp-submit'));
+            //Login CSS selectors for wordpress version 4.X.X
+            /* await t
             .typeText(Selector('#user_login'), username, { replace: true, paste: true })
             .typeText(Selector('#user_pass'), password, { replace: true, paste: true })
-            .click(Selector('#wp-submit'));
+            .click(Selector('#wp-submit')); */
         }
         if(APPNAME == 'humhub')
         {
