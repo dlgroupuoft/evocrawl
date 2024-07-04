@@ -45,7 +45,7 @@ npm install rrweb@2.0.0-alpha.1
 
 Install custom testcafe
 ```
-npm install testcafe-current.tgz # use the custom testcafe-current.tgz package in authzee git repo
+npm install testcafe-current.tgz # use the custom testcafe-current.tgz package in evocrawl git repo
 ```
 
 Install kafkajs client
