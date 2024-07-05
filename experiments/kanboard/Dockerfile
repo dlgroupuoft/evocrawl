@@ -8,6 +8,12 @@ RUN apt-get install -y php7.4 php7.4-cli php7.4-json php7.4-common php7.4-mysql 
 WORKDIR /home/wkdir
 RUN wget https://anonymous.4open.science/api/repo/codecoverage-6E84/zip
 RUN unzip zip -d /var/www/codecoverage
+RUN wget https://github.com/kanboard/kanboard/archive/refs/tags/v1.2.22.zip
+RUN unzip v1.2.22.zip
+RUN rm -r /var/www/html/
+RUN mv kanboard-1.2.22/ /var/www/html
+RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 755 /var/www/html
 RUN mkdir /var/www/codecoverage/coverages
 RUN chmod -R 777 /var/www/codecoverage/coverages
 RUN echo 'php_value auto_prepend_file "/var/www/codecoverage/codecoverage.php"' > /etc/apache2/conf-available/codecoverage.conf
