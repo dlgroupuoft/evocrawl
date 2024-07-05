@@ -22,7 +22,6 @@ const XSS_MODE = process.env.XSS_MODE?process.env.XSS_MODE:0;
 const DEBUG_PRINT = process.env.DEBUG_PRINT=="1"?true:false;  // default - disable debug logs
 const ENABLE_KAFKA = process.env.ENABLE_KAFKA=="1"?true:false;  // default - disable kafka connection
 
-const applogin = require('./userroles.js');
 const rrweb = require('../utils-evo/rrweb_events');
 const utils = require('../utils-evo/utils');
 const login_info = require('../utils-evo/login_information.json');

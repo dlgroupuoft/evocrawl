@@ -18,7 +18,6 @@ import { seq } from 'async';
 import { round } from 'lodash';
 import { execSync } from 'child_process';
 
-const applogin = require('./userroles.js');
 const login_info = require('../utils-evo/login_information.json');
 const utils = require("../utils-evo/utils");
 const rrweb = require("../utils-evo/rrweb_events");

@@ -1,25 +1,37 @@
+This file describe the steps of installing databases and benchmarks for the experiments, and also the steps for analyzing the results.
+## Setup Database and Enable Binary Logs ##
+Execute the following command to install the mysql-5.7 instance container. The container will have the binary log mode enabled and mount the volumn `/var/lib/mysql` within the container to the store location within the host, for easier access to the output binary logs.
+```
+mkdir [your_directory_for_storing_binary_logs]
+docker run -d --name mysql-test -e MYSQL_ROOT_PASSWORD=root --network bridge -v [your_directory_for_storing_binary_logs]:/var/lib/mysql mysql:5.7-debian mysqld --datadir=/var/lib/mysql --server-id=1 --log-bin=/var/lib/mysql/mysql-bin.log --binlog-ignore-db=mysql --binlog-ignore-db=information_schema
+```
+
+Here are the example commands for creating empty databases for benchmarks:
+
+```
+docker exec -it mysql-test bash
+mysql -u root -proot
+#below commands are executed by mysql
+CREATE DATABASE [your_database_name_for_benchmark];
+quit;
+```
+
 ## Enable Coverage Tracking on Benchmarks ##
-The `cov-tracking/Dockerfile` will build an Ubuntu image with apache2, php, and several php extensions installed. In addition, the php xdebug extension will log which lines have been executed for the (php) web application running inside the container. The logged coverage files are saved in `/var/www/codecoverage/coverages/` inside the container. 
+We provide example Dockerfiles and the installation guide for WordPress and Kanboard within the `wordpress/` and the `kanboard/` folder. The Dockerfiles inside the two folders will also setup the environments for tracking the coverage of the benchmarks
 
-We provide example Dockerfiles and the installation guide for WordPress and Kanboard within the `wordpress/` and the `kanboard/` folder. The Dockerfiles will also setup the envirouments for tracking the coverage of the benchmarks
+For other benchmarks, please use the Dockerfile within the `cov-tracking/` folder. the Dockerfile will build an Ubuntu image with apache2, php, and several php extensions installed. In addition, the php xdebug extension will log which lines have been executed for the (php) web application running inside the container. The logged coverage files are saved in `/var/www/codecoverage/coverages/` inside the container. 
 
-For other benchmarks, the workflow for installing the benchmarks and enabling the coverage tracking is:
+## Start the Experiments ##
+Please refer to the `README` file of the project root directory for starting experiments.
+
+## Coverage Collection ##
+Collecting Coverage - The coverage files are logged per request. To aggregate all the coverage files, execute the following command inside the benchmark container:
 ```
-cd cov-tracking/
-docker build . -t [your_image_name]
-docker run --name [your_container_name ] -p 8080:80 -d --network bridge [your_image_name] #replace 8080 with your own port number
-docker exec -it [your_container_name] bash
-
-```
-Then, install the target web application inside the container, please upload the web application to the container: /var/www/html folder for the convenience of coverage collection. (The installation steps can be referred to the installation guideline of each web application's website).
-
-
-Collecting Coverage - The coverage files are logged per request. To aggregate all the coverage files, run the following command inside the container:
-```
+docker exec -it [your_benchmark_container_name] bash
 cd /var/www/codecoverage
-python3 collect.py
+python3 collect.py #this process may take a while
 ``` 
 
-The target_path variable inside the `collect.py` should be the path where you upload your web application. The default is `/var/www/html`
-## Enable Binary Loggin for mysql-5.7 ##
+The `target_path` variable inside the `collect.py` should be the path where you upload your web application. The default is `/var/www/html`
+## Collect Number of HTML forms ##
 The workflow for installing the mysql-5.7 container with binary log enabled.

@@ -4,7 +4,7 @@
 #docker cp dokuwiki-ins:/var/www/html/data dokuwiki_data
 #python3 test_dokuwiki.py
 #ls /var/lib/mysql/mysql-bin.0* | tail -n 1
-filename=`(ls /var/lib/mysql2/mysql-bin.0* | tail -n 1)`
+filename=`(ls $1/mysql-bin.0* | tail -n 1)`
 echo $filename
-echo 'vmuser' | sudo -S mysqlbinlog --base64-output=decode-rows --verbose $filename > data/log.txt
+echo 'sudo_password' | sudo -S mysqlbinlog --base64-output=decode-rows --verbose $filename > data/log.txt
 #python3 'extract_injected_inputs.py' 'data'

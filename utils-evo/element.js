@@ -4,7 +4,7 @@ export default class element_AZ{
         this.DEBUG_PRINT = 1;
         this.heavy_pages = [];
     }
-    element_interaction = async function(t, login = false, login_credential = ["admin", "Vmuser8080@utoronto"]){
+    element_interaction = async function(t, login = false, login_credential = ["admin", ""]){
         const utils = require("../utils-evo/utils")
         let actions = ['click', 'text', 'select', 'upload'];
         let fuzz_string = "";

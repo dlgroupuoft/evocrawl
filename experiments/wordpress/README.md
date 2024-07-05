@@ -6,4 +6,4 @@ docker run --name [wordpress_container_name ] -p 8200:80 -d --network bridge [wo
 ```
 
 ## Configuration ##
-Use the browser to open the page: localhost:8200/ to start configuration. The website should provide enough information to help on filling in the database information.
+Use the browser to open the page: localhost:8200/ to start configuration (Please replace 8200 with your own port number if you have changed it). The website should provide enough information to help on filling in the database information.
