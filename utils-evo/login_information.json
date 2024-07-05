@@ -1,5 +1,5 @@
 {
-    "wordpress":"http://localhost/wp-login.php",
+    "wordpress":"http://localhost:8080/wp-login.php",
     "drupal":"http://localhost/user/login",
     "humhub":"http://localhost/index.php?r=user%2Fauth%2Flogin",
     "impresscms":"http://localhost/user.php",

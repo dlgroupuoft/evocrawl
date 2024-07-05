@@ -77,10 +77,18 @@ Kafka additional info : https://kafka.apache.org/quickstart
 
 
 ## How to run ##
-*Enable Input Insertions Detection*. EvoCrawl supports using the number of insertions into the database as a feedback for the evolutionary crawler. To enable this feature, the mysql or other sql-like databases needs to be configured to output binary logs to a folder. The current ```inputs_detection/loop_insert.sh``` only supports mysql binary logs. If the application requires other databases, the script can also be modified. Additionally, please set the ```INPUTS_DETECTION=1``` inside the ```crawl/XSS.sh or crawl/Crawler.sh```, if you want to enable Input Insertions Detection. This is an optional feature, set ```INPUTS_DETECTION=0```, if you do not need it.
+*Enable Input Insertions Detection*. EvoCrawl supports using the number of insertions into the database as a feedback for the evolutionary crawler. To enable this feature, the mysql or other sql-like databases needs to be configured to output binary logs to a folder. The current ```inputs_detection/extract_injected_inputs.py``` only supports mysql binary logs. If the application requires other databases, the script can also be modified. Additionally, please set the ```INPUTS_DETECTION=1``` inside the ```crawl/XSS.sh or crawl/Crawler.sh```, if you want to enable Input Insertions Detection. This is an optional feature, set ```INPUTS_DETECTION=0```, if you do not need it.
+
+Note: the process will not stop until manual interruption, since we want the process keep monitoring the database to provide feedback for the crawler. The `extract_injected_inputs.py` will execute the `c_insert.sh` script to convert the binary logs of the database into a more readable format. To read the binary logs, the `c_insert.sh` file require sudo privilege. Please update the sudo password field inside the script if you need the input sertions detection feature.
+
+Command for starting the detection process:
+```
+cd inputs_detection/
+screen -dmS pts-insertion-detection python3 extract_injected_inputs.py [Binary_log_storage_path]
+```
 
 Add a user role object - ```Web applications login URL, User login credentials and login element identifiers (css)``` in the file `login.js and login_information.json`
-(Current Implementation already includes login element identifiers for WordPress, Drupal, ImpressCMS, HotCRP, Gitlab, OpenCart, Dokuwiki, Kanboard and phpBB. You only need to modify the login URL and credentials inside the `login_information.json` file for testing on these applications. We currently don't support automatic login, but will add the module in the future)
+(Current Implementation already includes login element identifiers for WordPress, Drupal, ImpressCMS, HotCRP, Gitlab, OpenCart, Dokuwiki, Kanboard and phpBB. You only need to modify the login URL and credentials inside the `login_information.json` file for testing on these applications. We currently don't support automatic login, but will add the module in the future). The `crawler` property inside the `login_information.json` should be updated to the username of your registerd admin username. The `password` property should be set to your the admin user's password.
 
 Then run the monit.py under the `crawl/` folder with the following command
 
@@ -88,6 +96,9 @@ Then run the monit.py under the `crawl/` folder with the following command
 cd crawl/
 screen -dmS [your_screen_process_name] python3 monit.py --APP [appname] --MODE [Crawler or IDOR or XSS]
 ```
+
+IDOR - If you run the crawler in IDOR MODE, the two addtional users username should be placed at the `filter` and the `userB` properties inside the `login_information.json` file.
+
 The monit.py will stop all crawler processes after 24 hour.
 
 On another terminal window, you can monitor the crawler programs using `pm2 monit`

@@ -34,4 +34,12 @@ python3 collect.py #this process may take a while
 
 The `target_path` variable inside the `collect.py` should be the path where you upload your web application. The default is `/var/www/html`
 ## Collect Number of HTML forms ##
-The workflow for installing the mysql-5.7 container with binary log enabled.
+The commond to collect number of HTML forms submitted by EvoCrawl
+```
+cd ../inputs_detection/
+mkdir data/[benchmark_name]
+python3 parse.py [benchmark_name]
+node deduplication [benchmark_name]
+```
+
+The submitted forms should be inside `de_[benchmarkname].json` file within the `../inputs_detection/data/[benchmark_name]` folder.

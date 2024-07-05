@@ -1,0 +1,44 @@
+{
+    "wordpress": {
+        "_wpnonce": 1
+    },
+    "matomo": {
+        "random": 1,
+        "token_auth": 1
+    },
+    "drupal":{
+        "token": 1,
+        "keys": 1
+    },
+    "kanboard":{
+        "csrf_token": 1,
+        "project_id": 1,
+        "task_id": 1,
+        "link_id": 1,
+        "column_id": 1
+    },
+    "dokuwiki":{
+        "rev": 1
+    },
+    "humhub": {
+        "cguid": 1,
+        "id": 1,
+        "_": 1
+    },
+    "phpbb": {
+        "sid": 1
+    },
+    "impresscms": {
+        "id_REQUEST": 1,
+        "bid": 1
+    },
+    "hotcrp": {
+        "post": 1
+    },
+    "opencart": {
+        "user_token": 1,
+        "login_token": 1
+    },
+    "gitlab":{
+    }
+}

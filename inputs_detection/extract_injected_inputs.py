@@ -6,7 +6,8 @@ import time
 
 successful_injections = dict()
 appname = ["wordpress", "drupal", "kanboard", "humhub", "hotcrp", "phpbb", "opencart", "dokuwiki", "impresscms"]
-folder_name = sys.argv[1]
+folder_name = 'data'
+binary_log_path = sys.argv[1]
 for app in appname:
     search_load_sim = "s" + app[0:2]
     search_load_evo = "e" + app[0:2]
@@ -75,7 +76,7 @@ while(1):
         time.sleep(1)
         continue
     print('start extraction')
-    os.system('sh c_insert.sh')
+    os.system('sh c_insert.sh ' + binary_log_path)
     temp_injections = load_file(folder_name + "/", "insertions.json")
     if temp_injections != False:
         successful_injections = temp_injections
