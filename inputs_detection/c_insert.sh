@@ -4,7 +4,6 @@
 #docker cp dokuwiki-ins:/var/www/html/data dokuwiki_data
 #python3 test_dokuwiki.py
 #ls /var/lib/mysql/mysql-bin.0* | tail -n 1
-filename=`(ls $1/mysql-bin.0* | tail -n 1)`
-echo $filename
-echo 'sudo_password' | sudo -S mysqlbinlog --base64-output=decode-rows --verbose $filename > data/log.txt
+docker exec -it mysql-test bash -c "/home/docker_log_convert.sh"
+docker cp mysql-test:/home/data/log.txt data/
 #python3 'extract_injected_inputs.py' 'data'
