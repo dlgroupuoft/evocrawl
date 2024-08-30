@@ -29,7 +29,7 @@ The commands to install the Kanboard Container. The command should be executed u
 ```
 cd experiments/kanboard
 docker build . -t kanboard_cov_image
-docker run --name kanboard_ins -p 8300:80 -d --network bridge kanboard_cov_image #replace 8300 with your own port number if you wish
+docker run --name kanboard_ins -p 8300:80 -d --network bridge kanboard_cov_image #replace 8300 with your own port number if you like
 cd ../../
 ```
 
@@ -49,7 +49,7 @@ docker network inspect bridge #replace bridge with other names if you have conne
 Now Browse to localhost:8300/ to see whether the installation succeed. Please replace 8300 with your own port number.
 The default admin user for Kanboard instance are: `{username: admin, password: admin}`.
 
-If you wish to run the scanner for the detection of IDOR vulnerability, you need to register two additional users with a lower privilege than the admin user, but these two users must be at the same privilege level. (admin privilege > userA privilege = userB privilege). Please make all three users have the same login password.
+If you want to run the scanner for the detection of IDOR vulnerability, you need to register two additional users with a lower privilege than the admin user, but these two users must be at the same privilege level. (admin privilege > userA privilege = userB privilege). Please make all three users have the same login password.
 
 ## Install dependencies for EvoCrawl ##
 
