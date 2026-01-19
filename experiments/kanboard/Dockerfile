@@ -6,8 +6,8 @@ RUN apt-get update
 RUN apt-get -y install vim wget unzip git
 RUN apt-get install -y php7.4 php7.4-cli php7.4-json php7.4-common php7.4-mysql php7.4-zip php7.4-gd php7.4-mbstring php7.4-curl php7.4-xml php7.4-bcmath php7.4-xdebug php7.4-sqlite
 WORKDIR /home/wkdir
-RUN wget https://anonymous.4open.science/api/repo/codecoverage-6E84/zip
-RUN unzip zip -d /var/www/codecoverage
+RUN wget https://github.com/gxy1113/codecoverage.git
+RUN mv codecoverage/ /var/www/codecoverage
 RUN wget https://github.com/kanboard/kanboard/archive/refs/tags/v1.2.22.zip
 RUN unzip v1.2.22.zip
 RUN rm -r /var/www/html/
